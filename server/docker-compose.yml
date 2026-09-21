@@ -2,7 +2,7 @@ services:
   postgres:
     image: postgres:17-alpine
     ports:
-       - 5432:5432
+      - 5432:5432
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
@@ -10,7 +10,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD", "pg_isready", "-U", "postgres", "-d", "video_summarizer"]
+      test: ['CMD', 'pg_isready', '-U', 'postgres', '-d', 'video_summarizer']
       interval: 10s
       timeout: 5s
       retries: 5

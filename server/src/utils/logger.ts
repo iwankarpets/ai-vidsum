@@ -1,6 +1,6 @@
 import path from 'path';
 import winston from 'winston';
-import fs from 'fs'
+import fs from 'fs';
 
 const levels = {
   error: 0,
@@ -40,33 +40,32 @@ const logDir = 'logs';
 const errorLog = path.join(logDir, 'error.log');
 const combinedLog = path.join(logDir, 'combined.log');
 
-if (!fs.existsSync(logDir)){
-    fs.mkdirSync(logDir, {recursive:true})
+if (!fs.existsSync(logDir)) {
+  fs.mkdirSync(logDir, { recursive: true });
 }
 
 const logger = winston.createLogger({
-    level: level(),
-    levels,
-    format: fileFormat,
-    transports: [
-        new winston.transports.File({ filename: errorLog, level: "error" }),
-        new winston.transports.File({ filename: combinedLog })
-    ]
-})
+  level: level(),
+  levels,
+  format: fileFormat,
+  transports: [
+    new winston.transports.File({ filename: errorLog, level: 'error' }),
+    new winston.transports.File({ filename: combinedLog }),
+  ],
+});
 
-if(process.env.NODE_ENV !== "production"){
-    logger.add(
-        new winston.transports.Console({
-            format: consoleFormat
-        })
-    )
+if (process.env.NODE_ENV !== 'production') {
+  logger.add(
+    new winston.transports.Console({
+      format: consoleFormat,
+    }),
+  );
 }
-
 
 export const stream = {
-    write: (message: string) => {
-        logger.http(message.trim())
-    }
-}
+  write: (message: string) => {
+    logger.http(message.trim());
+  },
+};
 
 export default logger;

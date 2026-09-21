@@ -1,20 +1,18 @@
-interface SuccessResponse<T>{
-    status: "success";
-    data: T;
+interface SuccessResponse<T> {
+  status: 'success';
+  data: T;
 }
 
-interface ErrorResponse{
-    status: "error";
-    message: string;
-    error?: unknown;
+interface ErrorResponse {
+  status: 'error';
+  message: string;
+  error?: unknown;
 }
 
 export type ApiResponse<T> = SuccessResponse<T> | ErrorResponse;
 
 const serializeError = (error: unknown): unknown =>
-  error instanceof Error
-    ? { name: error.name, message: error.message, stack: error.stack }
-    : error;
+  error instanceof Error ? { name: error.name, message: error.message, stack: error.stack } : error;
 
 export const successResponse = <T>(data: T): SuccessResponse<T> => ({
   status: 'success',
