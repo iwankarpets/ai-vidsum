@@ -4,9 +4,9 @@
   "main": "dist/index.js",
   "type": "module",
   "scripts": {
-    "dev": "tsx watch src/index.ts",
+    "dev": "tsx watch --env-file=.env src/index.ts",
+    "start": "node --env-file=.env dist/index.js",
     "build": "tsc",
-    "start": "node dist/index.js",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
@@ -39,6 +39,7 @@
     "morgan": "^1.12.1",
     "pg": "^8.23.0",
     "reflect-metadata": "^0.2.2",
+    "resend": "^6.28.1",
     "typeorm": "^0.3.31",
     "winston": "^3.19.0"
   }

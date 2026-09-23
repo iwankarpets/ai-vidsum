@@ -1,6 +1,4 @@
-import dotenv from 'dotenv';
 import 'reflect-metadata';
-dotenv.config({ path: '.env' });
 import express, { type Express, type NextFunction } from 'express';
 import logger, { stream } from './utils/logger.js';
 import { AppDataSource } from './config/database.js';
@@ -10,7 +8,6 @@ import routes from './routes/index.js';
 import { type Request, type Response } from 'express';
 import { errorResponse } from './utils/response.js';
 import { handleError } from './utils/errors.js';
-import { json } from 'node:stream/consumers';
 
 const app: Express = express();
 const port = process.env.PORT || 6000;
