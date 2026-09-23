@@ -32,7 +32,7 @@ export class EmailService {
         subject: 'Welcometo our app',
         html: welcomeEmailTemplate(name || 'There'),
       });
-    } catch {
+    } catch(error) {
       logger.error(`Error sending welcome email: ${error}`);
       throw new AppError(StatusCodes.INTERNAL_SERVER_ERROR, 'Failed to send welcome email');
     }
