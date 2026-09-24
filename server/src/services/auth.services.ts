@@ -11,6 +11,7 @@ export class AuthService {
   private static readonly JWT_SECRET: Secret = process.env.JWT_SECRET || 'secret';
   private static readonly JWT_EXPIRES_IN: NonNullable<SignOptions['expiresIn']> =
     (process.env.JWT_EXPIRES_IN as SignOptions['expiresIn']) ?? '1d';
+
   static async register(email: string, password: string, name?: string) {
     const existingUser = await this.userRepository.findOne({
       where: { email },
@@ -128,5 +129,16 @@ export class AuthService {
     const { password: _password, ...safeUser } = user;
 
     return { user: safeUser, token };
+  }
+
+  static verifyToken(token: string): { userId: string; email: string } {
+    try {
+      return jwt.verify(token, this.JWT_SECRET) as {
+        userId: string;
+        email: string;
+      };
+    } catch (error) {
+      throw new AppError(StatusCodes.UNAUTHORIZED, 'Invalid token');
+    }
   }
 }
