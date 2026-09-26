@@ -13,4 +13,20 @@ export class VideoController {
       next(error);
     }
   }
+
+  static async downloadAudio(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { url } = req.body;
+      const videoInfo = await VideoService.getVideoInfo(url);
+      const audioPath = await VideoService.downloadAudio(url);
+
+      res.json(
+        successResponse({
+          ...videoInfo,
+          audioPath,
+          message: 'Audio downloaded succesfully',
+        }),
+      );
+    } catch (error) {}
+  }
 }

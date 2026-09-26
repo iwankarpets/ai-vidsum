@@ -3,10 +3,14 @@ import {
   CreateDateColumn,
   Entity,
   ManyToOne,
+  OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 import { type User } from './user.entity.js';
+
+import { Analysis } from './analysis.entity.js';
+import { Transcription } from './transcription.enity.js';
 
 export type VideoStatus = 'pending' | 'processing' | 'completed' | 'failed';
 
@@ -35,6 +39,12 @@ export class Video {
 
   @ManyToOne('User', 'videos', { nullable: false })
   declare user: User;
+
+  @OneToOne(() => Transcription, (transcription) => transcription.video)
+  declare transcription: Transcription;
+
+  @OneToOne(() => Analysis, (analysis) => analysis.video)
+  declare analysis: Analysis;
 
   @CreateDateColumn()
   declare createdAt: Date;

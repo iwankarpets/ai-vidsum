@@ -6,5 +6,5 @@ import { getVideoInfoSchema } from '../validations/video.validation.js';
 const router = Router();
 
 router.post('/info', validate(getVideoInfoSchema), VideoController.getVideoInfo);
-
+router.post('/audio', validate(getVideoInfoSchema), VideoController.downloadAudio);
 export default router;

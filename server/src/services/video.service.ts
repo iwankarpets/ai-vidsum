@@ -2,13 +2,12 @@ import path from 'path';
 import { createRequire } from 'module';
 import { AppDataSource } from '../config/database.js';
 import { Video } from '../entities/video.entity.js';
-import { mkdir } from 'fs/promises';
+import { mkdir, stat } from 'fs/promises';
 import ffmpeg from '@ffmpeg-installer/ffmpeg';
 import { AppError } from '../utils/errors.js';
 import { StatusCodes } from 'http-status-codes';
 import logger from '../utils/logger.js';
 import ytdl from 'ytdl-core';
-import { output } from 'zod';
 
 export interface VideoInfo {
   title: string;
@@ -102,26 +101,53 @@ export class VideoService {
   }
 
   static async downloadAudio(url: string): Promise<string> {
-    await this.ensureDirectoryExists();
+    try {
+      await this.ensureDirectoryExists();
 
-    const videoId = ytdl.getVideoID(url);
-    const audioPath = path.join(this.AUDIO_DIR, `${videoId}.mp3`);
-    await youtubeDl(url, {
-      extractAudio: true,
-      audioFormat: 'mp3',
-      audioQuality: 0,
-      output: audioPath,
-      noWarnings: true,
-      preferFreeFormats: true,
-      ffmpegLocation: ffmpeg.path,
-    });
+      const videoId = extractYoutubeVideoId(url);
+      if (!videoId) {
+        throw new AppError(StatusCodes.BAD_REQUEST, 'Invalid YouTube URL');
+      }
 
-    const fileStats = await import('fs/promises').then((fs) => fs.stat(audioPath));
+      const audioPath = path.join(this.AUDIO_DIR, `${videoId}.mp3`);
 
-    if (fileStats.size === 0) {
-      throw new AppError(StatusCodes.INTERNAL_SERVER_ERROR, 'Failed to dowload audio');
+      await youtubeDl(url, {
+        extractAudio: true,
+        audioFormat: 'mp3',
+        audioQuality: 0,
+        output: audioPath,
+        noWarnings: true,
+        preferFreeFormats: true,
+        ffmpegLocation: ffmpeg.path,
+      });
+
+      const fileStats = await stat(audioPath);
+
+      if (fileStats.size === 0) {
+        throw new AppError(StatusCodes.INTERNAL_SERVER_ERROR, 'Failed to download audio');
+      }
+
+      return audioPath;
+    } catch (error) {
+      if (error instanceof AppError) {
+        throw error;
+      }
+
+      logger.error('Error downloading audio', { error });
+
+      if (error instanceof Error) {
+        if (error.message.includes('ffmpeg')) {
+          throw new AppError(StatusCodes.INTERNAL_SERVER_ERROR, 'Failed to download audio');
+        }
+        if (error.message.includes('Private video')) {
+          throw new AppError(StatusCodes.FORBIDDEN, 'This video is private');
+        }
+        if (error.message.includes('not available')) {
+          throw new AppError(StatusCodes.NOT_FOUND, 'Video not found');
+        }
+      }
+
+      throw new AppError(StatusCodes.INTERNAL_SERVER_ERROR, 'Failed to download audio');
     }
-
-    return audioPath;
   }
 }
