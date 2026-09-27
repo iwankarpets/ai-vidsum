@@ -7,7 +7,6 @@ import ffmpeg from '@ffmpeg-installer/ffmpeg';
 import { AppError } from '../utils/errors.js';
 import { StatusCodes } from 'http-status-codes';
 import logger from '../utils/logger.js';
-import ytdl from 'ytdl-core';
 
 export interface VideoInfo {
   title: string;

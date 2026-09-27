@@ -51,7 +51,7 @@ export class TranscriptionService {
       logger.info(`Audio uploaded to GCS: ${gcsUrl}`);
       return gcsUrl;
     } catch (error) {
-      logger.error(`Error uploading audio to GCS: ${error}`);
+      logger.error(`Error uploading audio to GCS: ${String(error)}`);
       throw new AppError(StatusCodes.INTERNAL_SERVER_ERROR, 'Failed to upload audio to GCS');
     }
   }
@@ -73,7 +73,7 @@ export class TranscriptionService {
         logger.info(`Audio deleted from GCS: ${gcsUrl}`);
       }
     } catch (error) {
-      logger.error(`Error deleting audio from GCS: ${error}`);
+      logger.error(`Error deleting audio from GCS: ${String(error)}`);
       throw new AppError(StatusCodes.INTERNAL_SERVER_ERROR, 'Failed to delete audio from GCS');
     }
   }
@@ -100,7 +100,7 @@ export class TranscriptionService {
           resolve(outputPath);
         })
         .on('error', (err) => {
-          logger.error(`Error converting audio to WAV: ${err}`);
+          logger.error(`Error converting audio to WAV: ${String(err)}`);
           reject(new AppError(StatusCodes.INTERNAL_SERVER_ERROR, 'Failed to convert audio to WAV'));
         })
         .save(outputPath);
@@ -141,16 +141,22 @@ export class TranscriptionService {
             }
           }
         })
-        .on('end', async () => {
-          await unlink(analysisPath).catch(() => {});
-          const ratio = totalSamples > 0 ? musicScore / totalSamples : 0;
-          logger.info(`Music detection ratio: ${ratio}`);
-          resolve(ratio > 0.5 ? 'music' : 'speech');
+        .on('end', () => {
+          void (async () => {
+            await unlink(analysisPath).catch(() => {});
+            const ratio = totalSamples > 0 ? musicScore / totalSamples : 0;
+            logger.info(`Music detection ratio: ${ratio}`);
+            resolve(ratio > 0.5 ? 'music' : 'speech');
+          })();
         })
-        .on('error', async (err: Error) => {
-          logger.error(`Error detecting content type: ${err}`);
-          await unlink(analysisPath).catch(() => {});
-          reject(new AppError(StatusCodes.INTERNAL_SERVER_ERROR, 'Failed to detect content type'));
+        .on('error', (err: Error) => {
+          void (async () => {
+            logger.error(`Error detecting content type: ${String(err)}`);
+            await unlink(analysisPath).catch(() => {});
+            reject(
+              new AppError(StatusCodes.INTERNAL_SERVER_ERROR, 'Failed to detect content type'),
+            );
+          })();
         });
     });
   }
@@ -246,7 +252,7 @@ export class TranscriptionService {
       if (error instanceof AppError) {
         throw error;
       }
-      logger.error(`Error transcribing audio: ${error}`);
+      logger.error(`Error transcribing audio: ${String(error)}`);
       throw new AppError(StatusCodes.INTERNAL_SERVER_ERROR, 'Failed to transcribe audio');
     } finally {
       await Promise.all([

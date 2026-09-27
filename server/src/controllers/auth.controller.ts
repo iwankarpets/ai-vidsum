@@ -1,11 +1,20 @@
 import { type NextFunction, type Request, type Response } from 'express';
-import { AuthService } from '../services/auth.services.js';
+import { AuthService } from '../services/auth.service.js';
 import { successResponse } from '../utils/response.js';
 import { StatusCodes } from 'http-status-codes';
 import { AppError } from '../utils/errors.js';
+import type {
+  LoginInput,
+  RegisterInput,
+  ResendVerificationInput,
+} from '../validations/auth.validation.js';
 
 export class AuthController {
-  static async register(req: Request, res: Response, next: NextFunction) {
+  static async register(
+    req: Request<unknown, unknown, RegisterInput>,
+    res: Response,
+    next: NextFunction,
+  ) {
     try {
       const { email, password, name } = req.body;
       const result = await AuthService.register(email, password, name);
@@ -15,7 +24,11 @@ export class AuthController {
     }
   }
 
-  static async login(req: Request, res: Response, next: NextFunction) {
+  static async login(
+    req: Request<unknown, unknown, LoginInput>,
+    res: Response,
+    next: NextFunction,
+  ) {
     try {
       const { email, password } = req.body;
       const result = await AuthService.login(email, password);
@@ -28,6 +41,7 @@ export class AuthController {
   static async verifyEmail(req: Request, res: Response, next: NextFunction) {
     try {
       const { token } = req.query;
+
       if (!token || typeof token !== 'string') {
         throw new AppError(StatusCodes.BAD_REQUEST, 'Invalid token');
       }
@@ -39,7 +53,11 @@ export class AuthController {
     }
   }
 
-  static async resendVerificationEmail(req: Request, res: Response, next: NextFunction) {
+  static async resendVerificationEmail(
+    req: Request<unknown, unknown, ResendVerificationInput>,
+    res: Response,
+    next: NextFunction,
+  ) {
     try {
       const { email } = req.body;
       const result = await AuthService.resendVerificationEmail(email);

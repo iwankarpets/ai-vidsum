@@ -5,6 +5,7 @@ import { AppError } from '../utils/errors.js';
 import crypto from 'crypto';
 import jwt, { type Secret, type SignOptions } from 'jsonwebtoken';
 import { EmailService } from './email.service.js';
+import logger from '../utils/logger.js';
 
 export class AuthService {
   private static readonly userRepository = AppDataSource.getRepository(User);
@@ -138,7 +139,21 @@ export class AuthService {
         email: string;
       };
     } catch (error) {
+      logger.error('Verification failed', { error });
       throw new AppError(StatusCodes.UNAUTHORIZED, 'Invalid token');
     }
+  }
+
+  static async getUserById(userId: string): Promise<User> {
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+      relations: ['videos'],
+    });
+
+    if (!user) {
+      throw new AppError(StatusCodes.NOT_FOUND, 'User not found');
+    }
+
+    return user;
   }
 }

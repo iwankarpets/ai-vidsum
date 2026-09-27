@@ -10,7 +10,7 @@ import {
 import { type User } from './user.entity.js';
 
 import { Analysis } from './analysis.entity.js';
-import { Transcription } from './transcription.enity.js';
+import { Transcription } from './transcription.entity.js';
 
 export type VideoStatus = 'pending' | 'processing' | 'completed' | 'failed';
 
@@ -27,6 +27,9 @@ export class Video {
 
   @Column({ type: 'text', nullable: true })
   declare description: string | null;
+
+  @Column({ type: 'varchar', nullable: true })
+  declare author: string | null;
 
   @Column({ type: 'int' })
   declare duration: number;

@@ -8,6 +8,7 @@ import routes from './routes/index.js';
 import { type Request, type Response } from 'express';
 import { errorResponse } from './utils/response.js';
 import { handleError } from './utils/errors.js';
+import { JobsService } from './services/jobs.service.js';
 
 const app: Express = express();
 const port = process.env.PORT || 6000;
@@ -16,6 +17,10 @@ const initialize = async () => {
   try {
     await AppDataSource.initialize();
     logger.info('Database connected');
+
+    JobsService.initialize();
+    await JobsService.setupQueueHandlers();
+    logger.info('Jobs service initialized');
 
     app.listen(port, () => {
       logger.info(`[server]: Server is running at http://localhost:${port}`);
@@ -38,7 +43,7 @@ app.use((req: Request, res: Response) => {
   res.status(404).json(errorResponse(`Cannot find ${req.originalUrl} on this server`));
 });
 
-app.use((error: Error, req: Request, res: Response, next: NextFunction) => {
+app.use((error: Error, req: Request, res: Response, _next: NextFunction) => {
   logger.error(error.stack || error.message);
   const errorDetails = handleError(error);
 

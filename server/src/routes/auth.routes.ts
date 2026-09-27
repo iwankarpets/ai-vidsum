@@ -6,17 +6,21 @@ import {
   registerSchema,
   resendVerificationSchema,
   verifyEmailSchema,
-} from '../validations/auth.validations.js';
+} from '../validations/auth.validation.js';
 
 const router = Router();
 
-router.post('/register', validate(registerSchema), AuthController.register);
-router.post('/login', validate(loginSchema), AuthController.login);
-router.get('/verify-email', validate(verifyEmailSchema), AuthController.verifyEmail);
-router.post(
-  '/resend-verification',
-  validate(resendVerificationSchema),
-  AuthController.resendVerificationEmail,
+router.post('/register', validate(registerSchema), (req, res, next) =>
+  AuthController.register(req, res, next),
+);
+router.post('/login', validate(loginSchema), (req, res, next) =>
+  AuthController.login(req, res, next),
+);
+router.get('/verify-email', validate(verifyEmailSchema), (req, res, next) =>
+  AuthController.verifyEmail(req, res, next),
+);
+router.post('/resend-verification', validate(resendVerificationSchema), (req, res, next) =>
+  AuthController.resendVerificationEmail(req, res, next),
 );
 
 export default router;

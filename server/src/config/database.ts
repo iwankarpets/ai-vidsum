@@ -1,7 +1,7 @@
 import { DataSource } from 'typeorm';
 import { User } from '../entities/user.entity.js';
 import { Video } from '../entities/video.entity.js';
-import { Transcription } from '../entities/transcription.enity.js';
+import { Transcription } from '../entities/transcription.entity.js';
 import { Analysis } from '../entities/analysis.entity.js';
 
 export const AppDataSource = new DataSource({
