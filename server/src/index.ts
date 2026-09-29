@@ -9,9 +9,14 @@ import { type Request, type Response } from 'express';
 import { errorResponse } from './utils/response.js';
 import { handleError } from './utils/errors.js';
 import { JobsService } from './services/jobs.service.js';
+import { ExpressAdapter } from '@bull-board/express';
+import { createBullBoard } from '@bull-board/api';
+import { BullAdapter } from '@bull-board/api/bullAdapter';
+import { type RequestHandler } from 'express';
 
 const app: Express = express();
-const port = process.env.PORT || 6000;
+const port = process.env.PORT || 5000;
+const adminPort = process.env.ADMIN_PORT || 5001;
 
 const initialize = async () => {
   try {
@@ -21,6 +26,22 @@ const initialize = async () => {
     JobsService.initialize();
     await JobsService.setupQueueHandlers();
     logger.info('Jobs service initialized');
+
+    const adminApp: Express = express();
+    const serverAdapter = new ExpressAdapter();
+
+    createBullBoard({
+      queues: [new BullAdapter(JobsService.getTranscriptionQueue())],
+      serverAdapter,
+    });
+
+    adminApp.use(cors());
+    serverAdapter.setBasePath('/admin/queues');
+
+    adminApp.use('/admin/queues', serverAdapter.getRouter() as RequestHandler);
+    adminApp.listen(adminPort, () => {
+      logger.info(`[admin]: Admin server is running at http://localhost:${adminPort}`);
+    });
 
     app.listen(port, () => {
       logger.info(`[server]: Server is running at http://localhost:${port}`);

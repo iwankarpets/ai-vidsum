@@ -6,6 +6,18 @@ const urlBodySchema = z.object({
   }),
 });
 
+export const getVideoByIdSchema = z.object({
+  params: z.object({
+    id: z.string().uuid('Invalid video ID'),
+  }),
+});
+
+export const getJobStatusSchema = z.object({
+  params: z.object({
+    jobId: z.string().min(1, 'Job ID is required'),
+  }),
+});
+
 export const getVideoInfoSchema = urlBodySchema;
 export const downloadAudioSchema = urlBodySchema;
 export const transcribeVideoSchema = urlBodySchema;

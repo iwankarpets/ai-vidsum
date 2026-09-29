@@ -10,6 +10,7 @@ import { unlink } from 'fs/promises';
 import { AIService } from './ai.service.js';
 import { AppError } from '../utils/errors.js';
 import logger from '../utils/logger.js';
+import { StatusCodes } from 'http-status-codes';
 
 const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000;
 
@@ -28,6 +29,22 @@ interface JobResult {
   final?: boolean;
 }
 
+interface VideoStatusResult {
+  id: string;
+  status: string;
+  hasTranscription: boolean;
+  hasAnalysis: boolean;
+  title: string | null;
+  thumbnail: string | null;
+}
+
+const parseJobResult = (value: unknown): JobResult | undefined => {
+  if (value === undefined || value === null) {
+    return undefined;
+  }
+  return value as JobResult;
+};
+
 export class JobsService {
   private static transcriptionQueue: Queue.Queue<TranscriptionJob>;
   private static readonly videoRepository = AppDataSource.getRepository(Video);
@@ -35,7 +52,10 @@ export class JobsService {
   private static readonly analysisRepository = AppDataSource.getRepository(Analysis);
   private static readonly userRepository = AppDataSource.getRepository(User);
 
-  // было: static async initialize() — убрали async, т.к. await внутри не было
+  static getTranscriptionQueue() {
+    return this.transcriptionQueue;
+  }
+
   static initialize() {
     this.transcriptionQueue = new Queue<TranscriptionJob>('transcription', {
       redis: {
@@ -52,7 +72,6 @@ export class JobsService {
   }
 
   static async setupQueueHandlers() {
-    // было: this.transcriptionQueue.process(async (job) => {...}); — добавили void
     void this.transcriptionQueue.process(async (job) => {
       const { url, userId } = job.data;
       let audioPath: string | undefined;
@@ -170,7 +189,6 @@ export class JobsService {
       }
     });
 
-    // было: on('completed', async (job, result) => {...}) — теперь не async, с void-обёрткой внутри
     this.transcriptionQueue.on('completed', (job, result: JobResult) => {
       void (async () => {
         try {
@@ -193,7 +211,6 @@ export class JobsService {
       logger.error(`Transcription queue error: ${String(error)}`);
     });
 
-    // было: три отдельных вызова .clean(...) без await — теперь обёрнуты в Promise.all + await
     await Promise.all([
       this.transcriptionQueue.clean(TWENTY_FOUR_HOURS_MS, 'delayed'),
       this.transcriptionQueue.clean(TWENTY_FOUR_HOURS_MS, 'wait'),
@@ -234,5 +251,94 @@ export class JobsService {
     });
 
     return { jobId: job.id };
+  }
+
+  static async getJobStatus(jobId: string, userId: string) {
+    const job = await this.transcriptionQueue.getJob(jobId);
+    if (!job) {
+      throw new AppError(StatusCodes.NOT_FOUND, 'Job not found');
+    }
+
+    if (job.data.userId !== userId) {
+      throw new AppError(StatusCodes.FORBIDDEN, 'Access denied');
+    }
+
+    const state = (await job.getState()) as string;
+    const progress = job.progress() as number;
+    const result = parseJobResult(job.returnvalue);
+    const failedReason = job.failedReason;
+    const attempts = job.attemptsMade;
+
+    const videoStatus = result?.videoInfo?.videoUrl
+      ? await this.getVideoStatus(result.videoInfo.videoUrl)
+      : null;
+
+    return {
+      id: job.id,
+      state,
+      progress,
+      result,
+      failedReason,
+      attempts,
+      videoStatus,
+      final: result?.final || state === 'completed' || attempts >= 3,
+    };
+  }
+
+  static async getAllJobs(userId: string) {
+    const [activeJobs, waitingJobs, completedJobs, failedJobs, delayedJobs] = await Promise.all([
+      this.transcriptionQueue.getActive(0, 50),
+      this.transcriptionQueue.getWaiting(0, 50),
+      this.transcriptionQueue.getCompleted(0, 50),
+      this.transcriptionQueue.getFailed(0, 50),
+      this.transcriptionQueue.getDelayed(0, 50),
+    ]);
+
+    const jobs = [...activeJobs, ...waitingJobs, ...completedJobs, ...failedJobs, ...delayedJobs];
+
+    const userJobs = jobs.filter((job) => job.data.userId === userId);
+    userJobs.sort((a, b) => b.timestamp - a.timestamp);
+
+    const jobDetails = await Promise.all(
+      userJobs.map(async (job) => {
+        const state = (await job.getState()) as string;
+        const videoStatus = job.data.url ? await this.getVideoStatus(job.data.url) : null;
+
+        return {
+          id: job.id,
+          state,
+          progress: job.progress() as number,
+          data: job.data,
+          timestamp: job.timestamp,
+          processedOn: job.processedOn,
+          finishedOn: job.finishedOn,
+          attempts: job.attemptsMade,
+          result: parseJobResult(job.returnvalue),
+          failedReason: job.failedReason,
+          videoStatus,
+        };
+      }),
+    );
+
+    return jobDetails;
+  }
+  private static async getVideoStatus(url: string): Promise<VideoStatusResult | null> {
+    const video = await this.videoRepository.findOne({
+      where: { url },
+      relations: ['transcription', 'analysis'],
+    });
+
+    if (!video) {
+      return null;
+    }
+
+    return {
+      id: video.id,
+      status: video.status,
+      hasTranscription: !!video.transcription,
+      hasAnalysis: !!video.analysis,
+      title: video.title,
+      thumbnail: video.thumbnail,
+    };
   }
 }

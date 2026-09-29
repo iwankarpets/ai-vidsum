@@ -23,4 +23,6 @@ router.post('/resend-verification', validate(resendVerificationSchema), (req, re
   AuthController.resendVerificationEmail(req, res, next),
 );
 
+router.get('/me', (req, res, next) => AuthController.getProfile(req, res, next));
+
 export default router;

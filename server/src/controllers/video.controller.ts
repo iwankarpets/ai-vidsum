@@ -6,6 +6,7 @@ import { JobsService } from '../services/jobs.service.js';
 import { AppError } from '../utils/errors.js';
 import { StatusCodes } from 'http-status-codes';
 import type { GetVideoInfoInput } from '../validations/video.validation.js';
+import { transformVideo } from '../utils/transformer.js';
 
 export class VideoController {
   static async getVideoInfo(
@@ -71,6 +72,79 @@ export class VideoController {
           message: 'Transcription job created successfully',
         }),
       );
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async getTranscriptionStatus(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { jobId } = req.params;
+      const userId = req.user?.userId;
+
+      if (!userId) {
+        throw new AppError(StatusCodes.UNAUTHORIZED, 'Unauthorized');
+      }
+
+      if (!jobId || typeof jobId !== 'string') {
+        throw new AppError(StatusCodes.BAD_REQUEST, 'Invalid job ID');
+      }
+
+      const status = await JobsService.getJobStatus(jobId, userId);
+      res.json(successResponse(status));
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async getVideoById(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { id } = req.params;
+      const userId = req.user?.userId;
+
+      if (!userId) {
+        throw new AppError(StatusCodes.UNAUTHORIZED, 'Unauthorized');
+      }
+
+      if (!id || typeof id !== 'string') {
+        throw new AppError(StatusCodes.BAD_REQUEST, 'Invalid video ID');
+      }
+
+      const video = await VideoService.getVideoById(id, userId);
+
+      if (!video) {
+        throw new AppError(StatusCodes.NOT_FOUND, 'Video not found');
+      }
+
+      res.json(successResponse(transformVideo(video)));
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async getAllJobs(req: Request, res: Response, next: NextFunction) {
+    try {
+      const userId = req.user?.userId;
+      if (!userId) {
+        throw new AppError(StatusCodes.UNAUTHORIZED, 'Unauthorized');
+      }
+
+      const jobs = await JobsService.getAllJobs(userId);
+      res.json(successResponse(jobs));
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async getUserVideos(req: Request, res: Response, next: NextFunction) {
+    try {
+      const userId = req.user?.userId;
+      if (!userId) {
+        throw new AppError(StatusCodes.UNAUTHORIZED, 'Unauthorized');
+      }
+
+      const videos = await VideoService.getUserVideos(userId);
+      res.json(successResponse(videos.map(transformVideo)));
     } catch (error) {
       next(error);
     }

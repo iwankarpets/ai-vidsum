@@ -6,6 +6,9 @@ import { StatusCodes } from 'http-status-codes';
 import path from 'path';
 import ffmpeg from 'fluent-ffmpeg';
 import { unlink } from 'fs/promises';
+import ffmpegInstaller from '@ffmpeg-installer/ffmpeg';
+
+ffmpeg.setFfmpegPath(ffmpegInstaller.path);
 
 export interface TranscriptionResult {
   text: string;
@@ -95,6 +98,11 @@ export class TranscriptionService {
           'loudnorm=I=-16:LRA=11:TP=-1.5',
           'aformat=channel_layouts=mono',
         ])
+        .outputOptions(['-acodec pcm_s16le', '-ac 1', '-ar 16000'])
+        .save(outputPath)
+        .on('start', () => {
+          logger.info(`Starting audio conversion to WAV: ${inputPath} -> ${outputPath}`);
+        })
         .on('end', () => {
           logger.info(`Audio converted to WAV: ${outputPath}`);
           resolve(outputPath);

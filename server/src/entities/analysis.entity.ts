@@ -1,4 +1,11 @@
-import { Column, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  JoinColumn,
+  OneToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 import { Video } from './video.entity.js';
 
 export type Sentiment = 'positive' | 'negative' | 'neutral';
@@ -22,9 +29,15 @@ export class Analysis {
   declare sentiment: Sentiment;
 
   @Column({ type: 'text', array: true })
+  declare topics: string[];
+
+  @Column({ type: 'text', array: true })
   declare suggestedTags: string[];
 
   @OneToOne(() => Video, (video) => video.analysis)
   @JoinColumn()
   declare video: Video;
+
+  @CreateDateColumn()
+  declare createdAt: Date;
 }
