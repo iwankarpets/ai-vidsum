@@ -262,11 +262,11 @@ export class JobsService {
   static async getJobStatus(jobId: string, userId: string) {
     const job = await this.transcriptionQueue.getJob(jobId);
     if (!job) {
-      throw new AppError(StatusCodes.NOT_FOUND, 'Job not found');
+      throw new AppError(StatusCodes.NOT_FOUND, 'Job not found', 'JOB_NOT_FOUND');
     }
 
     if (job.data.userId !== userId) {
-      throw new AppError(StatusCodes.FORBIDDEN, 'Access denied');
+     throw new AppError(StatusCodes.FORBIDDEN, 'Access denied', 'JOB_ACCESS_DENIED');
     }
 
     const state = (await job.getState()) as string;

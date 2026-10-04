@@ -164,7 +164,7 @@ export class AuthService {
       };
     } catch (error) {
       logger.error('Verification failed', { error });
-      throw new AppError(StatusCodes.UNAUTHORIZED, 'Invalid token');
+     throw new AppError(StatusCodes.UNAUTHORIZED, 'Invalid token', 'INVALID_TOKEN');
     }
   }
 
@@ -175,7 +175,7 @@ export class AuthService {
     });
 
     if (!user) {
-      throw new AppError(StatusCodes.NOT_FOUND, 'User not found');
+      throw new AppError(StatusCodes.NOT_FOUND, 'User not found', 'USER_NOT_FOUND');
     }
 
     return user;

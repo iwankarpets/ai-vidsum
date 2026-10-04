@@ -22,13 +22,13 @@ export const authenticate = (req: Request, res: Response, next: NextFunction) =>
     console.log('Authorization Header:', authHeader); // Debugging line
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      throw new AppError(StatusCodes.UNAUTHORIZED, 'Unauthorized');
+      throw new AppError(StatusCodes.UNAUTHORIZED, 'Unauthorized', 'UNAUTHORIZED');
     }
 
     const token = authHeader.split(' ')[1];
 
     if (!token) {
-      throw new AppError(StatusCodes.UNAUTHORIZED, 'Unauthorized');
+      throw new AppError(StatusCodes.UNAUTHORIZED, 'Unauthorized', 'VALIDATION_ERROR');
     }
 
     const decoded = AuthService.verifyToken(token);

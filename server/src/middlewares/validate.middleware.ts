@@ -17,7 +17,7 @@ export const validate =
         .map((issue) => `${issue.path.join('.')}: ${issue.message}`)
         .join('; ');
 
-      return next(new AppError(StatusCodes.BAD_REQUEST, message));
+      return next(new AppError(StatusCodes.BAD_REQUEST, message, 'VALIDATION_ERROR'));
     }
 
     const data = result.data;

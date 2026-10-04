@@ -56,7 +56,7 @@ export class VideoController {
       const userId = req.user?.userId;
 
       if (!userId) {
-        throw new AppError(StatusCodes.UNAUTHORIZED, 'Unauthorized');
+        throw new AppError(StatusCodes.UNAUTHORIZED, 'Unauthorized', 'UNAUTHORIZED');
       }
 
       const user = await AuthService.getUserById(userId);
@@ -83,11 +83,11 @@ export class VideoController {
       const userId = req.user?.userId;
 
       if (!userId) {
-        throw new AppError(StatusCodes.UNAUTHORIZED, 'Unauthorized');
+       throw new AppError(StatusCodes.UNAUTHORIZED, 'Unauthorized', 'UNAUTHORIZED');
       }
 
       if (!jobId || typeof jobId !== 'string') {
-        throw new AppError(StatusCodes.BAD_REQUEST, 'Invalid job ID');
+        throw new AppError(StatusCodes.BAD_REQUEST, 'Invalid job ID', 'INVALID_JOB_ID');
       }
 
       const status = await JobsService.getJobStatus(jobId, userId);
@@ -103,17 +103,17 @@ export class VideoController {
       const userId = req.user?.userId;
 
       if (!userId) {
-        throw new AppError(StatusCodes.UNAUTHORIZED, 'Unauthorized');
+        throw new AppError(StatusCodes.UNAUTHORIZED, 'Unauthorized', 'UNAUTHORIZED');
       }
 
       if (!id || typeof id !== 'string') {
-        throw new AppError(StatusCodes.BAD_REQUEST, 'Invalid video ID');
+        throw new AppError(StatusCodes.BAD_REQUEST, 'Invalid video ID', 'INVALID_VIDEO_ID');
       }
 
       const video = await VideoService.getVideoById(id, userId);
 
       if (!video) {
-        throw new AppError(StatusCodes.NOT_FOUND, 'Video not found');
+        throw new AppError(StatusCodes.NOT_FOUND, 'Video not found', 'VIDEO_NOT_FOUND');
       }
 
       res.json(successResponse(transformVideo(video)));
@@ -126,7 +126,7 @@ export class VideoController {
     try {
       const userId = req.user?.userId;
       if (!userId) {
-        throw new AppError(StatusCodes.UNAUTHORIZED, 'Unauthorized');
+        throw new AppError(StatusCodes.UNAUTHORIZED, 'Unauthorized', 'UNAUTHORIZED');
       }
 
       const jobs = await JobsService.getAllJobs(userId);
@@ -140,7 +140,7 @@ export class VideoController {
     try {
       const userId = req.user?.userId;
       if (!userId) {
-        throw new AppError(StatusCodes.UNAUTHORIZED, 'Unauthorized');
+       throw new AppError(StatusCodes.UNAUTHORIZED, 'Unauthorized', 'UNAUTHORIZED');
       }
 
       const videos = await VideoService.getUserVideos(userId);

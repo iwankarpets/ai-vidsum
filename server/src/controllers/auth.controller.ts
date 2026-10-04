@@ -43,7 +43,7 @@ export class AuthController {
       const { token } = req.query;
 
       if (!token || typeof token !== 'string') {
-        throw new AppError(StatusCodes.BAD_REQUEST, 'Invalid token');
+        throw new AppError(StatusCodes.BAD_REQUEST, 'Invalid token', 'INVALID_TOKEN');
       }
 
       const result = await AuthService.verifyEmail(token);
@@ -71,7 +71,7 @@ export class AuthController {
     try {
       const userId = req.user?.userId;
       if (!userId) {
-        throw new AppError(StatusCodes.UNAUTHORIZED, 'User not authenticated');
+        throw new AppError(StatusCodes.UNAUTHORIZED, 'User not authenticated', 'UNAUTHORIZED');
       }
 
       const result = await AuthService.getUserById(userId);
