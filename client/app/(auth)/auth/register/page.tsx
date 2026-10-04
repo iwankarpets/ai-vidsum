@@ -14,6 +14,7 @@ import { useRegister } from "@/lib/hooks/queries/auth";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import Link from "next/link";
+import { ApiErrorData } from "@/lib/api/types";
 
 export default function RegisterPage() {
   const [error, setError] = useState<string | null>(null);
@@ -29,28 +30,30 @@ export default function RegisterPage() {
   });
 
   const onSubmit = async (data: RegisterSchema) => {
-    try {
-      setError(null);
-      await register.mutateAsync({
-        name: data.name,
-        email: data.email,
-        password: data.password,
-      });
+  try {
+    setError(null);
+    await register.mutateAsync({
+      email: data.email,
+      password: data.password,
+      ...(data.name?.trim() && { name: data.name.trim() }),
+    });
 
-      toast.success("Account created succesfully");
-    } catch (error: unknown) {
-      if (axios.isAxiosError(error)) {
-        const message = error.response?.data?.message;
-        if (message?.toLowerCase().includes("email")) {
-          setError("Email already in use");
-        } else {
-          setError(message ?? "Something went wrong");
-        }
-      } else {
-        setError("Something went wrong");
-      }
+    toast.success('Account created successfully');
+  } catch (err: unknown) {
+    if (!axios.isAxiosError<ApiErrorData>(err)) {
+      setError('Something went wrong');
+      return;
     }
-  };
+
+    const code = err.response?.data?.code;
+
+    if (code === 'EMAIL_ALREADY_EXISTS') {
+      setError('Email already in use');
+    } else {
+      setError(err.response?.data?.message ?? 'Something went wrong');
+    }
+  }
+};
 
   return (
     <div>
@@ -62,7 +65,7 @@ export default function RegisterPage() {
           Enter your details below to create an account
         </p>
       </div>
-      {!error && (
+      {error && (
         <Alert variant={"destructive"} className="text-sm">
           <ExclamationTriangleIcon className="h-4 w-4" />
           <AlertDescription>{error}</AlertDescription>
@@ -147,7 +150,7 @@ export default function RegisterPage() {
         <div className="flex items-center justify-end">
           <Link
             href="/auth/login"
-            className="text-sm text-muted-foregrounf hover:text-primary"
+            className="text-sm text-muted-foregroun hover:text-primary"
           >
             Already have an account? Sign in
           </Link>

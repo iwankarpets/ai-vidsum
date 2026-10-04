@@ -13,6 +13,7 @@ import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import axios from "axios";
 import Link from "next/link";
+import { ApiErrorData } from "@/lib/api/types";
 
 export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
@@ -31,18 +32,16 @@ export default function LoginPage() {
       setError(null);
       await login.mutateAsync(data);
     } catch (error: unknown) {
-      if (!axios.isAxiosError(error)) {
+      if (!axios.isAxiosError<ApiErrorData>(error)) {
         setError("Something went wrong. Please try again");
         return;
       }
 
       const errorMessage = error.response?.data?.message;
-      const lower = errorMessage?.toLowerCase() ?? "";
-
-      if (lower.includes("credentials")) {
-        setError("Invalid email or password. Please try again");
-      } else if (lower.includes("verify")) {
-        setError("Please verify your email before logging in.");
+      if (error.response?.data?.code === 'INVALID_CREDENTIALS') {
+          setError('Invalid email or password. Please try again');
+      } else if (error.response?.data?.code === 'EMAIL_NOT_VERIFIED') {
+          setError('Please verify your email before logging in.');
       } else {
         setError(errorMessage || "Something went wrong. Please try again");
       }
@@ -110,7 +109,7 @@ export default function LoginPage() {
         <div className="flex items-center justify-end">
           <Link
             href="/auth/register"
-            className="text-sm text-muted-foregrounf hover:text-primary"
+            className="text-sm text-muted-foreground hover:text-primary"
           >
             Don&apos;t have an account? Sign up
           </Link>
@@ -120,7 +119,7 @@ export default function LoginPage() {
           {login.isPending ? (
             <>
               <Loader2 className="size-4 animate-spin" />
-              Signin in....
+              Signing in....
             </>
           ) : (
             "Sign in"

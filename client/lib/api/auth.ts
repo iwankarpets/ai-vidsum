@@ -1,18 +1,36 @@
-import { apiClient } from "./client";
+import { apiClient } from './client';
+import {
+  type ApiSuccessResponse,
+  type AuthResponse,
+  type LoginPayload,
+  type RegisterPayload,
+  type User,
+} from './types';
 
 export const authApi = {
-    async login(data: any): Promise<any>{
-        const response = await apiClient.post("/auth/login", data);
-        return response.data
-    },
+  async login(data: LoginPayload): Promise<AuthResponse> {
+    const response = await apiClient.post<ApiSuccessResponse<AuthResponse>>('/auth/login', data);
+    return response.data.data;
+  },
 
-     async register(data: any): Promise<any>{
-        const response = await apiClient.post("/auth/register", data);
-        return response.data
-    },
+  async register(data: RegisterPayload): Promise<AuthResponse> {
+    const response = await apiClient.post<ApiSuccessResponse<AuthResponse>>(
+      '/auth/register',
+      data,
+    );
+    return response.data.data;
+  },
 
-    async getCurrentUser(): Promise<any>{
-        const response = await apiClient.get("/auth/me")
-        return response.data.data
-    }
+  async getCurrentUser(): Promise<User> {
+    const response = await apiClient.get<ApiSuccessResponse<User>>('/auth/me');
+    return response.data.data;
+  },
+
+  async verifyEmail(token: string): Promise<{ message: string }> {
+  const response = await apiClient.get<ApiSuccessResponse<{ message: string }>>(
+    '/auth/verify-email',
+    { params: { token } },
+  );
+  return response.data.data;
 }
+};

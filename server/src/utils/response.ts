@@ -6,6 +6,7 @@ interface SuccessResponse<T> {
 interface ErrorResponse {
   status: 'error';
   message: string;
+  code?: string;
   error?: unknown;
 }
 
@@ -19,9 +20,10 @@ export const successResponse = <T>(data: T): SuccessResponse<T> => ({
   data,
 });
 
-export const errorResponse = (message: string, error?: unknown): ErrorResponse => ({
+export const errorResponse = (message: string, code?: string, error?: unknown): ErrorResponse => ({
   status: 'error',
   message,
+  ...(code !== undefined && { code }),
   ...(process.env.NODE_ENV === 'development' && error !== undefined
     ? { error: serializeError(error) }
     : {}),

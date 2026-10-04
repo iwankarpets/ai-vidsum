@@ -2,7 +2,7 @@ import axios from "axios"
 
 const BASE_URL = "http://localhost:5000/api/v1"
 
-let getToken: ()=> string | null = () => localStorage.get("token")
+let getToken: ()=> string | null = () => localStorage.getItem("token")
 
 export const setTokenGetter = (fn: ()=>string | null)=>{
     getToken = fn;

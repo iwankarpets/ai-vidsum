@@ -1,4 +1,6 @@
 import 'reflect-metadata';
+import dns from 'dns';
+dns.setDefaultResultOrder('ipv4first');
 import express, { type Express, type NextFunction } from 'express';
 import logger, { stream } from './utils/logger.js';
 import { AppDataSource } from './config/database.js';
@@ -61,14 +63,18 @@ const API_VERSION = '/api/v1';
 app.use(API_VERSION, routes);
 
 app.use((req: Request, res: Response) => {
-  res.status(404).json(errorResponse(`Cannot find ${req.originalUrl} on this server`));
+  res
+    .status(404)
+    .json(errorResponse(`Cannot find ${req.originalUrl} on this server`, 'ROUTE_NOT_FOUND'));
 });
 
 app.use((error: Error, req: Request, res: Response, _next: NextFunction) => {
   logger.error(error.stack || error.message);
   const errorDetails = handleError(error);
 
-  res.status(errorDetails.statusCode).json(errorResponse(errorDetails.message, error));
+  res
+    .status(errorDetails.statusCode)
+    .json(errorResponse(errorDetails.message, errorDetails.code, error));
 });
 
 initialize().catch((error) => {

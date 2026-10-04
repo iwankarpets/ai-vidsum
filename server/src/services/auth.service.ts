@@ -19,7 +19,11 @@ export class AuthService {
     });
 
     if (existingUser) {
-      throw new AppError(StatusCodes.CONFLICT, 'User with this email already exists');
+      throw new AppError(
+        StatusCodes.CONFLICT,
+        'User with this email already exists',
+        'EMAIL_ALREADY_EXISTS',
+      );
     }
 
     const emailVerificationToken = crypto.randomBytes(32).toString('hex');
@@ -53,11 +57,19 @@ export class AuthService {
     });
 
     if (!user) {
-      throw new AppError(StatusCodes.BAD_REQUEST, 'Invalid verification token');
+      throw new AppError(
+        StatusCodes.BAD_REQUEST,
+        'Invalid verification token',
+        'INVALID_VERIFICATION_TOKEN',
+      );
     }
 
     if (!user.emailVerificationTokenExpires || user.emailVerificationTokenExpires < new Date()) {
-      throw new AppError(StatusCodes.BAD_REQUEST, 'Verification token expired');
+      throw new AppError(
+        StatusCodes.BAD_REQUEST,
+        'Verification token expired',
+        'VERIFICATION_TOKEN_EXPIRED',
+      );
     }
 
     user.isEmailVerified = true;
@@ -76,11 +88,15 @@ export class AuthService {
     });
 
     if (!user) {
-      throw new AppError(StatusCodes.BAD_REQUEST, 'User not found');
+      throw new AppError(StatusCodes.BAD_REQUEST, 'User not found', 'USER_NOT_FOUND');
     }
 
     if (user.isEmailVerified) {
-      throw new AppError(StatusCodes.BAD_REQUEST, 'Email already verified');
+      throw new AppError(
+        StatusCodes.BAD_REQUEST,
+        'Email already verified',
+        'EMAIL_ALREADY_VERIFIED',
+      );
     }
 
     const emailVerificationToken = crypto.randomBytes(32).toString('hex');
@@ -113,13 +129,21 @@ export class AuthService {
     });
 
     if (!user) {
-      throw new AppError(StatusCodes.UNAUTHORIZED, 'Invalid credentials');
+      throw new AppError(StatusCodes.UNAUTHORIZED, 'Invalid credentials', 'INVALID_CREDENTIALS');
     }
 
     const isPasswordValid = await user.comparePassword(password);
 
     if (!isPasswordValid) {
-      throw new AppError(StatusCodes.UNAUTHORIZED, 'Invalid credentials');
+      throw new AppError(StatusCodes.UNAUTHORIZED, 'Invalid credentials', 'INVALID_CREDENTIALS');
+    }
+
+    if (!user.isEmailVerified) {
+      throw new AppError(
+        StatusCodes.FORBIDDEN,
+        'Please verify your email before logging in',
+        'EMAIL_NOT_VERIFIED',
+      );
     }
 
     user.lastLogin = new Date();

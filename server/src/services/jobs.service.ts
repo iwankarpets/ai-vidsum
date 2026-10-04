@@ -62,6 +62,13 @@ export class JobsService {
         host: process.env.REDIS_HOST || 'localhost',
         port: parseInt(process.env.REDIS_PORT || '6379'),
       },
+      settings: {
+        // Долгие джобы (скачивание, конвертация, аплоад) не должны считаться зависшими
+        lockDuration: 5 * 60 * 1000,
+        lockRenewTime: 60 * 1000,
+        stalledInterval: 60 * 1000,
+        maxStalledCount: 2,
+      },
       defaultJobOptions: {
         attempts: 3,
         backoff: { type: 'exponential', delay: 20000 },
@@ -202,7 +209,6 @@ export class JobsService {
       })();
     });
 
-    // было: on('failed', async (job, error) => {...}) — убрали async, await не было
     this.transcriptionQueue.on('failed', (job, error) => {
       logger.error(`Job ${job.id} failed: ${String(error)}`);
     });
@@ -211,10 +217,10 @@ export class JobsService {
       logger.error(`Transcription queue error: ${String(error)}`);
     });
 
+    // 'active' больше не чистим: это могло затирать реально работающие джобы при рестарте
     await Promise.all([
       this.transcriptionQueue.clean(TWENTY_FOUR_HOURS_MS, 'delayed'),
       this.transcriptionQueue.clean(TWENTY_FOUR_HOURS_MS, 'wait'),
-      this.transcriptionQueue.clean(TWENTY_FOUR_HOURS_MS, 'active'),
     ]);
   }
 
@@ -322,6 +328,7 @@ export class JobsService {
 
     return jobDetails;
   }
+
   private static async getVideoStatus(url: string): Promise<VideoStatusResult | null> {
     const video = await this.videoRepository.findOne({
       where: { url },

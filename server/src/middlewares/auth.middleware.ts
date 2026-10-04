@@ -19,6 +19,8 @@ export const authenticate = (req: Request, res: Response, next: NextFunction) =>
   try {
     const authHeader = req.headers.authorization;
 
+    console.log('Authorization Header:', authHeader); // Debugging line
+
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       throw new AppError(StatusCodes.UNAUTHORIZED, 'Unauthorized');
     }

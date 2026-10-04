@@ -1,21 +1,19 @@
-import { createContext, useContext, useEffect, useState } from "react";
-import { User } from "../api/types";
-import { useRouter } from "next/navigation";
-import { setTokenGetter } from "../api/client";
-import { authApi } from "../api/auth";
+import { createContext, useContext, useEffect, useState } from 'react';
+import { RegisterPayload, type User } from '../api/types';
+import { useRouter } from 'next/navigation';
+import { setTokenGetter } from '../api/client';
+import { authApi } from '../api/auth';
 
 interface AuthContextType {
-  user: any | null;
+  user: User | null;
   loading: boolean;
   token: string | null;
   login: (token: string, user: User) => void;
-  register: (data: any) => Promise<void>;
+  register: (data: RegisterPayload) => Promise<void>;
   logout: () => void;
 }
 
-export const AuthContext = createContext<AuthContextType | undefined>(
-  undefined,
-);
+export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -28,16 +26,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [token]);
 
   useEffect(() => {
-    const storedToken = localStorage.getItem("token");
+    const storedToken = localStorage.getItem('token');
     if (storedToken) {
       setToken(storedToken);
+      setTokenGetter(() => storedToken);
+
       authApi
         .getCurrentUser()
-        .then((response) => {
-          setUser(response.user);
+        .then((currentUser) => {
+          setUser(currentUser);
         })
         .catch(() => {
-          setLoading(false);
+          setToken(null);
         })
         .finally(() => {
           setLoading(false);
@@ -49,33 +49,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (token) {
-      localStorage.setItem("token", token);
+      localStorage.setItem('token', token);
     } else {
-      localStorage.removeItem("token");
+      localStorage.removeItem('token');
     }
   }, [token]);
 
-  const login = (newToken: string, user: User) => {
+  const login = (newToken: string, newUser: User) => {
     setToken(newToken);
-    setUser(user);
+    setUser(newUser);
   };
 
   const logout = () => {
     setToken(null);
     setUser(null);
-    router.push("/auth/login");
+    router.push('/auth/login');
   };
 
-  const register = async (data: any) => {
+  const register = async (data: RegisterPayload) => {
     const { token: newToken, user: newUser } = await authApi.register(data);
     setToken(newToken);
     setUser(newUser);
   };
 
   return (
-    <AuthContext.Provider
-      value={{ user, loading, token, login, register, logout }}
-    >
+    <AuthContext.Provider value={{ user, loading, token, login, register, logout }}>
       {children}
     </AuthContext.Provider>
   );
@@ -84,7 +82,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 export function useAuth() {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error("useAuth must be used within an AuthProvider");
+    throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
 }
@@ -95,7 +93,7 @@ export function useRequireAuth() {
 
   useEffect(() => {
     if (!loading && !user) {
-      router.push("/auth/login");
+      router.push('/auth/login');
     }
   }, [loading, user, router]);
 

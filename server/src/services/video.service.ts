@@ -75,6 +75,7 @@ export class VideoService {
 
   static async getVideoInfo(url: string): Promise<VideoInfo> {
     try {
+      console.log('Fetching video info for URL:', url); // Debugging line
       const rawInfo = await youtubeDl(url, {
         dumpSingleJson: true,
         noWarnings: true,

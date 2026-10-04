@@ -4,6 +4,7 @@ export class AppError extends Error {
   constructor(
     public statusCode: number,
     public message: string,
+    public code?: string,
     public isOperational = true,
   ) {
     super(message);
@@ -17,12 +18,15 @@ export const handleError = (error: Error) => {
       status: 'error',
       statusCode: error.statusCode,
       message: error.message,
+      code: error.code,
     };
   }
+
   logger.error(error);
   return {
     status: 'error',
     statusCode: 500,
     message: 'Internal Server Error',
+    code: 'INTERNAL_SERVER_ERROR',
   };
 };

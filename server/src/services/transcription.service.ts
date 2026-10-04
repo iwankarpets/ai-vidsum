@@ -17,9 +17,16 @@ export interface TranscriptionResult {
 }
 
 export class TranscriptionService {
-  private static readonly BUCKET_NAME = 'ai-video-summarizer-audio';
+  private static readonly BUCKET_NAME = 'ai-video-summarizer-audio-190162960284';
   private static readonly speechClient = new SpeechClient();
-  private static readonly storage = new Storage();
+  // Увеличенный общий таймаут ретраев (по умолчанию 600 сек), чтобы медленный канал успевал
+  private static readonly storage = new Storage({
+    retryOptions: {
+      autoRetry: true,
+      maxRetries: 5,
+      totalTimeout: 60 * 60, // секунды
+    },
+  });
 
   static async ensureBucketExists() {
     try {
@@ -45,8 +52,9 @@ export class TranscriptionService {
     try {
       await bucket.upload(filePath, {
         destination: fileName,
+        resumable: true,
         metadata: {
-          contentType: 'audio/wav',
+          contentType: 'audio/ogg',
         },
       });
 
@@ -58,6 +66,7 @@ export class TranscriptionService {
       throw new AppError(StatusCodes.INTERNAL_SERVER_ERROR, 'Failed to upload audio to GCS');
     }
   }
+
   static async deleteFromGCS(gcsUrl: string): Promise<void> {
     try {
       const prefix = `gs://${this.BUCKET_NAME}/`;
@@ -81,58 +90,50 @@ export class TranscriptionService {
     }
   }
 
-  static async convertToWav(inputPath: string): Promise<string> {
+  /**
+   * Конвертирует вход в OGG/Opus (mono, 16 kHz, 24 kbps) ~3 KB/s вместо 32 KB/s у WAV.
+   * Если в сборке ffmpeg нет libopus, замени на FLAC:
+   *   .audioCodec('flac').format('flac') + расширение .flac + AudioEncoding.FLAC
+   */
+  static async convertToAudio(inputPath: string): Promise<string> {
     const outputPath = path.join(
       path.dirname(inputPath),
-      `${path.basename(inputPath, path.extname(inputPath))}.wav`,
+      `${path.basename(inputPath, path.extname(inputPath))}.ogg`,
     );
 
     return new Promise((resolve, reject) => {
       ffmpeg(inputPath)
-        .toFormat('wav')
-        .audioFilters([
-          'aresample=resampler=soxr',
-          'highpass=f=50',
-          'lowpass=f=3000',
-          'afftdn=nf=-25',
-          'loudnorm=I=-16:LRA=11:TP=-1.5',
-          'aformat=channel_layouts=mono',
-        ])
-        .outputOptions(['-acodec pcm_s16le', '-ac 1', '-ar 16000'])
-        .save(outputPath)
+        .noVideo()
+        .audioCodec('libopus')
+        .audioBitrate('24k')
+        .audioChannels(1)
+        .audioFrequency(16000)
+        .format('ogg')
+        .audioFilters(['highpass=f=50', 'afftdn=nf=-25', 'loudnorm=I=-16:LRA=11:TP=-1.5'])
         .on('start', () => {
-          logger.info(`Starting audio conversion to WAV: ${inputPath} -> ${outputPath}`);
+          logger.info(`Starting audio conversion to OGG/Opus: ${inputPath} -> ${outputPath}`);
         })
         .on('end', () => {
-          logger.info(`Audio converted to WAV: ${outputPath}`);
+          logger.info(`Audio converted to OGG/Opus: ${outputPath}`);
           resolve(outputPath);
         })
         .on('error', (err) => {
-          logger.error(`Error converting audio to WAV: ${String(err)}`);
-          reject(new AppError(StatusCodes.INTERNAL_SERVER_ERROR, 'Failed to convert audio to WAV'));
+          logger.error(`Error converting audio: ${String(err)}`);
+          reject(new AppError(StatusCodes.INTERNAL_SERVER_ERROR, 'Failed to convert audio'));
         })
-        .save(outputPath);
+        .save(outputPath); // save вызываем один раз
     });
   }
 
   static async detectContentType(audioPath: string): Promise<'speech' | 'music'> {
-    const analysisPath = path.join(
-      path.dirname(audioPath),
-      `${path.basename(audioPath, path.extname(audioPath))}_analysis.wav`,
-    );
-
     return new Promise((resolve, reject) => {
       let musicScore = 0;
       let totalSamples = 0;
 
       ffmpeg(audioPath)
-        .toFormat('wav')
-        .audioFrequency(16000)
-        .audioFilter(['silencedetect=n=-50dB:d=0.5', 'volumedetect'])
-        .save(analysisPath)
+        .audioFilters(['silencedetect=n=-50dB:d=0.5', 'volumedetect'])
+        .format('null') // ничего не пишем на диск, только анализ
         .on('stderr', (stderrLine: string) => {
-          logger.info(`FFmpeg stderr: ${stderrLine}`);
-
           if (stderrLine.includes('silence_duration')) {
             musicScore -= 1;
             totalSamples += 1;
@@ -142,7 +143,7 @@ export class TranscriptionService {
             const match = stderrLine.match(/max_volume:\s*([-\d.]+)/);
             if (match?.[1]) {
               const maxVolume = parseFloat(match[1]);
-              if (maxVolume > -5) {
+              if (maxVolume > -1) {
                 musicScore += 1;
               }
               totalSamples += 1;
@@ -150,27 +151,20 @@ export class TranscriptionService {
           }
         })
         .on('end', () => {
-          void (async () => {
-            await unlink(analysisPath).catch(() => {});
-            const ratio = totalSamples > 0 ? musicScore / totalSamples : 0;
-            logger.info(`Music detection ratio: ${ratio}`);
-            resolve(ratio > 0.5 ? 'music' : 'speech');
-          })();
+          const ratio = totalSamples > 0 ? musicScore / totalSamples : 0;
+          logger.info(`Music detection ratio: ${ratio}`);
+          resolve(ratio > 0.5 ? 'music' : 'speech');
         })
         .on('error', (err: Error) => {
-          void (async () => {
-            logger.error(`Error detecting content type: ${String(err)}`);
-            await unlink(analysisPath).catch(() => {});
-            reject(
-              new AppError(StatusCodes.INTERNAL_SERVER_ERROR, 'Failed to detect content type'),
-            );
-          })();
-        });
+          logger.error(`Error detecting content type: ${String(err)}`);
+          reject(new AppError(StatusCodes.INTERNAL_SERVER_ERROR, 'Failed to detect content type'));
+        })
+        .save('-');
     });
   }
 
   static async transcribe(audioPath: string): Promise<TranscriptionResult> {
-    let wavePath: string | undefined;
+    let convertedPath: string | undefined;
     let gcsUrl: string | undefined;
 
     try {
@@ -179,10 +173,10 @@ export class TranscriptionService {
       }
 
       await this.ensureBucketExists();
-      wavePath = await this.convertToWav(audioPath);
-      logger.info(`Converted audio to WAV: ${wavePath}`);
+      convertedPath = await this.convertToAudio(audioPath);
+      logger.info(`Converted audio: ${convertedPath}`);
 
-      const contentType = await this.detectContentType(wavePath);
+      const contentType = await this.detectContentType(convertedPath);
       logger.info(`Detected content type: ${contentType}`);
 
       if (contentType === 'music') {
@@ -193,7 +187,7 @@ export class TranscriptionService {
         };
       }
 
-      gcsUrl = await this.uploadToGCS(wavePath);
+      gcsUrl = await this.uploadToGCS(convertedPath);
       logger.info(`Upload audio to GCS: ${gcsUrl}`);
 
       const request: protos.google.cloud.speech.v1.ILongRunningRecognizeRequest = {
@@ -201,7 +195,7 @@ export class TranscriptionService {
           uri: gcsUrl,
         },
         config: {
-          encoding: protos.google.cloud.speech.v1.RecognitionConfig.AudioEncoding.LINEAR16,
+          encoding: protos.google.cloud.speech.v1.RecognitionConfig.AudioEncoding.OGG_OPUS,
           sampleRateHertz: 16000,
           languageCode: process.env.SPEECH_TO_TEXT_LANGUAGE || 'en-US',
           enableAutomaticPunctuation: true,
@@ -264,7 +258,7 @@ export class TranscriptionService {
       throw new AppError(StatusCodes.INTERNAL_SERVER_ERROR, 'Failed to transcribe audio');
     } finally {
       await Promise.all([
-        wavePath ? unlink(wavePath).catch(() => {}) : Promise.resolve(),
+        convertedPath ? unlink(convertedPath).catch(() => {}) : Promise.resolve(),
         gcsUrl ? this.deleteFromGCS(gcsUrl).catch(() => {}) : Promise.resolve(),
       ]);
     }
