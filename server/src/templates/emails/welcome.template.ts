@@ -22,6 +22,6 @@ export const welcomeEmailTemplate = (name: string = 'There'): string => {
       </p>
     `,
     buttonText: 'Get Started',
-    buttonUrl: `${process.env.API_URL}/dashboard`,
+    buttonUrl: `${process.env.FRONTEND_URL}/dashboard`,
   });
 };

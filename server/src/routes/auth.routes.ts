@@ -7,6 +7,7 @@ import {
   resendVerificationSchema,
   verifyEmailSchema,
 } from '../validations/auth.validation.js';
+import { authenticate } from '../middlewares/auth.middleware.js';
 
 const router = Router();
 
@@ -23,6 +24,6 @@ router.post('/resend-verification', validate(resendVerificationSchema), (req, re
   AuthController.resendVerificationEmail(req, res, next),
 );
 
-router.get('/me', (req, res, next) => AuthController.getProfile(req, res, next));
+router.get('/me', authenticate, (req, res, next) => AuthController.getProfile(req, res, next));
 
 export default router;

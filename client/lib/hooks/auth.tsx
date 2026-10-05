@@ -26,26 +26,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [token]);
 
   useEffect(() => {
-    const storedToken = localStorage.getItem('token');
-    if (storedToken) {
-      setToken(storedToken);
-      setTokenGetter(() => storedToken);
+  const storedToken = localStorage.getItem('token');
+  if (storedToken) {
+    setToken(storedToken);
+    setTokenGetter(() => storedToken);
 
-      authApi
-        .getCurrentUser()
-        .then((currentUser) => {
-          setUser(currentUser);
-        })
-        .catch(() => {
-          setToken(null);
-        })
-        .finally(() => {
-          setLoading(false);
-        });
-    } else {
-      setLoading(false);
-    }
-  }, []);
+    authApi
+      .getCurrentUser()
+      .then((currentUser) => {
+        setUser(currentUser);
+      })
+      .catch(() => {
+        setToken(null);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  } else {
+    setLoading(false);
+  }
+}, []);
 
   useEffect(() => {
     if (token) {
@@ -55,11 +55,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [token]);
 
-  const login = (newToken: string, newUser: User) => {
-    setToken(newToken);
-    setUser(newUser);
-  };
-
+ const login = (newToken: string, newUser: User) => {
+   console.log('login() called with token:', newToken); 
+  setToken(newToken);
+  setUser(newUser);
+  setTokenGetter(() => newToken);
+};
   const logout = () => {
     setToken(null);
     setUser(null);

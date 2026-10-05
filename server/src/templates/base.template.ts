@@ -71,13 +71,7 @@ export const baseEmailTemplate = ({
                       <table cellpadding="0" cellspacing="0" role="presentation" style="margin-top:28px;">
                         <tr>
                           <td style="border-radius:10px; background:linear-gradient(135deg,#4f46e5 0%,#7c3aed 100%); box-shadow:0 4px 12px rgba(79,70,229,0.35);">
-                            
-                              href="${buttonUrl}"
-                              target="_blank"
-                              style="display:inline-block; padding:13px 28px; color:#ffffff; text-decoration:none; font-weight:600; font-size:14px; border-radius:10px;"
-                            >
-                              ${buttonText}
-                            </a>
+                            <a href="${buttonUrl}" target="_blank" style="display:inline-block; padding:13px 28px; color:#ffffff; text-decoration:none; font-weight:600; font-size:14px; border-radius:10px;">${buttonText}</a>
                           </td>
                         </tr>
                       </table>
