@@ -9,21 +9,49 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
+import { FormSchema, videoSchema, VideoSchema } from "@/lib/validations/video";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { submitVideo } from "@/lib/api/video";
+import { toast } from "sonner";
+import { error } from "console";
 
-const formSchema = z.object({
-    url: z.string().url("Введите корректный URL"),
-});
-
-type FormSchema = z.infer<typeof formSchema>;
 
 export default function VideoSubmissionForm() {
-    const form = useForm<FormSchema>({
-        resolver: zodResolver(formSchema),
+    const [isSubmitting, setIsSubmitting] = useState(false)
+    const router = useRouter()
+    const queryClient = useQueryClient()
+
+    const form = useForm<VideoSchema>({
+        resolver: zodResolver(videoSchema),
         defaultValues: { url: "" },
     });
 
+    const { mutate } = useMutation({
+        mutationFn: submitVideo,
+        onSuccess: (data)=>{
+            toast.success("Video submitted successfully", {
+                description: data.videoInfo.title,
+            })
+            form.reset()
+            queryClient.invalidateQueries({queryKey: ["jobs"]})
+            queryClient.invalidateQueries({queryKey: ["videos"]})
+        },
+        onError: (error)=>{
+            toast.error("Failed to submit video", {
+                description: error.message
+            })
+        },
+        onSettled:(error)=>{
+            setIsSubmitting(false)
+        }
+        
+    })
+
     const onSubmit = (data: FormSchema) => {
-        console.log(data);
+        setIsSubmitting(true)
+        mutate(data)
     };
 
     return (
@@ -64,9 +92,9 @@ export default function VideoSubmissionForm() {
                     <Button
                         type="submit"
                         className="w-full transition-all mt-4"
-                        disabled={form.formState.isSubmitting}
+                        disabled={isSubmitting}
                     >
-                        Submit Video
+                        { isSubmitting ? "Submitting..." : "Submit Video" }
                     </Button>
                 </form>
             </CardContent>

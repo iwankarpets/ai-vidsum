@@ -10,4 +10,9 @@ export const videoSchema =  z.object({
         )
 })
 
+const formSchema = z.object({
+    url: z.string().url("Введите корректный URL"),
+});
+
+export type FormSchema = z.infer<typeof formSchema>;
 export type VideoSchema = z.infer<typeof videoSchema>
