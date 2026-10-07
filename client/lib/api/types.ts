@@ -1,11 +1,11 @@
 export interface User {
-    id: string;
-    email: string;
-    name: string;
-    isEmailVerified: boolean;
-    lastLoginAt: string;
-    createdAt: string;
-    updatedAt: string;
+  id: string;
+  email: string;
+  name: string;
+  isEmailVerified: boolean;
+  lastLoginAt: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface LoginPayload {
@@ -19,19 +19,18 @@ export interface RegisterPayload {
   name?: string;
 }
 
-
 export interface AuthResponse {
   user: User;
   token: string;
 }
 
 export interface ApiSuccessResponse<T> {
-  status: 'success';
+  status: "success";
   data: T;
 }
 
 export interface ApiErrorData {
-  status: 'error';
+  status: "error";
   message: string;
   code?: string;
 }
@@ -39,9 +38,10 @@ export interface ApiErrorData {
 export interface VideoInfo {
   title: string;
   description: string;
-  duration:number;
+  duration: number;
   author: string;
   videoUrl: string;
+  thumbnail: string;
   url: string;
 }
 
@@ -56,7 +56,7 @@ export interface JobStatus {
   id: string;
   state: "waiting" | "active" | "completed" | "failed" | "delayed";
   progress: number;
-  result?:{
+  result?: {
     videoInfo?: VideoInfo;
     transcription?: {
       transcription?: {
@@ -65,22 +65,22 @@ export interface JobStatus {
           start: number;
           end: number;
           text: string;
-        }>
-      }
-      analysis?:{
+        }>;
+      };
+      analysis?: {
         summary: string;
         keyPoints: string[];
         topics: string[];
-        suggestedTags: string[]
+        suggestedTags: string[];
       };
       error?: string;
-      final?:boolean;
+      final?: boolean;
     };
     failedReason?: string;
     attempts: number;
     videoStatus?: VideoStatus;
     final: boolean;
-  }
+  };
 }
 
 export interface VideoSubmissiionRequest {
@@ -93,7 +93,7 @@ export interface VideoSubmissionResponse {
   message: string;
 }
 
-export interface JobsListResponse{
+export interface JobsListResponse {
   jobs: JobStatus[];
 }
 
@@ -104,25 +104,25 @@ export interface VideoTranscriptrion {
   createdAt: string;
 }
 
-export interface VideoAnalysis  {
+export interface VideoAnalysis {
   summary: string;
   keyPoints: string;
-  sentiment:string;
+  sentiment: string;
   topics: string[];
   suggestedTags: string[];
   createdAt: string;
 }
 
 export interface Video {
-  id:number;
-  url:string;
+  id: number;
+  url: string;
   title: string;
   description: string;
-  duration:number;
+  duration: number;
   author: string;
   status: string;
   createdAt: string;
-  updatedAt:string;
+  updatedAt: string;
   transcription: VideoTranscriptrion | null;
   analysis: VideoAnalysis | null;
 }
