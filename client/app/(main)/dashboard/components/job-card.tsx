@@ -1,12 +1,21 @@
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
 import { JobStatus } from "@/lib/api/types";
+import { CheckCircledIcon } from "@radix-ui/react-icons";
 import { cn } from "cn";
 import {
   AlertCircleIcon,
+  AlertTriangle,
   CheckCircleIcon,
   Clock,
   ClockIcon,
+  ExternalLink,
+  Eye,
+  Link,
   Loader2Icon,
+  PlayCircleIcon,
   XCircleIcon,
 } from "lucide-react";
 import Image from "next/image";
@@ -51,7 +60,7 @@ const stateMessages = {
   delayed: "Processing delayed",
 };
 
-const stateIcons = ({
+const StateIcons = ({
   state,
   className,
 }: {
@@ -99,17 +108,170 @@ export function JobCard({ job, showDetails = true }: JobCardProps) {
               {job.thumbnail || videoInfo ? (
                 <div className="relative size-full">
                   <Image
-                    src={job.thumbnail || videoInfo?.thumbnail}
+                    src={job.thumbnail || "/placeholder"}
                     alt={videoInfo?.title || "Video thumbnail"}
                     fill
                     className="size-full object-cover transition-transform duration-300 group-hover:scale-105"
                   />
+                  <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity
+                  duration-300 flex items-center justify-center">
+                    <PlayCircleIcon className="size-8 text-white drop-shadow-lg transform scale-90 group-hover:scale-100
+                    transition-transform duration-300"/>
+                  </div>
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-60"/>
                 </div>
               ) : (
-                <div></div>
+                <div className="flex items-center justify-center h-full w-full">
+                  <Youtube className="size-8 text-muted-foreground/50"/>
+                </div>
               )}
             </div>
+            <div className="absolute -right-1 -bottom-1 p-1.5 rounded-full bg-white shadow-sm border-2 border-white">
+              <StateIcons state={job.state} className="size-5"/>      
+            </div>
           </div>
+
+          <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-3 mb-2">
+                <h3 className="text-base font-semibold leading-6 truncate">
+                  {videoInfo?.title || "untitle Video"}
+                  </h3>
+                  <Badge variant={"secondary"}
+                    className={cn(
+                      "capitalize transition-colors duration-300",
+                      stateBadgeStyles[job.state]
+                    )}
+                  >
+                    {job.state}
+                  </Badge>
+              </div>
+              {
+                videoInfo?.description && (
+                  <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
+                      {videoInfo.description}
+                  </p>
+                )}
+
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
+                  {videoInfo && (
+                    <>
+                      <span className="inline-flex items-center gap-1.5">
+                        <Clock className="size-3.5"/>
+                        {Math.floor(videoInfo.duration/60)}m
+                      </span>
+                      <span className="text-muted-foreground/30">.</span>
+                    </>
+                  )}
+                  <span>{stateMessages[job.state]}</span>
+                  {
+                    job.attempts > 0 && (
+                      <>
+                      <span className="text-muted-foreground/30">.</span>
+                      <span className="text-muted-foreground/90">
+                        Attempt {job.attempts}/3
+                      </span>
+                      </>
+                    )}
+                </div>
+
+                {isProcessing && (
+                  <div className="mt-4 space-y-2">
+                    <div className="flex items-center justify-between text-sm">
+                      <div className="flex items-center gap-2">
+                        {
+                          job.state === "active" ? (
+                            <Loader2Icon className="size-3.5 animate-spin"/>
+                          ) : (
+                            <CheckCircledIcon className="size-3.5 text-green-500"/>
+                          )}
+                          <span className="text-muted-foreground/75">
+                            {job.state === "waiting" ? "Queued" : "Processing"}
+                          </span>
+                      </div>
+                      <span className="font-medium text-muted-foreground/90">
+                          {job.progress.toFixed(2)}%
+                      </span>
+                    </div>
+                    <Progress 
+                      value={job.progress} 
+                      className="h-1.5"
+                      indicatorClassName={cn(
+                        "transition-all duration-500",
+                        job.state === "active"
+                          ? "bg-gradient-to-r from-blue-500 to-blue-400"
+                          : "bg-gradient-to-r from-yellow-500 to-yellow-400"
+                      )}
+                      />
+                  </div>
+                )}
+                {job.state === "completed" &&
+                  job.result &&
+                  !showDetails &&
+                  job.videoStatus && (
+                    <div className="mt-4 flex flex-wrap items-center gap-4 text-sm">
+                      <div className="flex items-center gap-2">
+                        <Badge variant={"secondary"}
+                          className={cn(
+                              "transition-colors duration-300",
+                              job.videoStatus.hasTranscription
+                              ? "bg-green-50 text-green-700 ring-1 ring-inset ring-green-600/20"
+                              : "bg-green-50 text-red-700 ring-1 ring-inset ring-red-600/20"
+                            )}
+                        >
+                            Transcription
+                        </Badge>
+                        <span>
+                          {job.videoStatus.hasTranscription
+                            ? "Complete"
+                            : "Pending"
+                          }
+                        </span>
+                      </div>
+                      <div>
+                        <Badge>Analysis</Badge>
+                        <span>
+                          {job.videoStatus.hasAnalysis ? "Complete" : "Pending"}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="flex items-start gap-3 ml-4">
+                      {videoInfo && (
+                        <a 
+                          href={videoInfo.videoUrl}
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 px-3 text-sm text-muted-foreground
+                          hover:text-foreground transition-colors rounded-md hover:bg-muted"
+                          >
+                          <Youtube className="size-4"/>
+                          <span className="hidden sm:inline">Youtube</span>
+                          <ExternalLink className="h-3 w-3 opacity-50"/>
+                        </a>
+                      )}
+                      {showDetails && (
+                        <Link href={`/dashboard/history/${job.id}`}>
+                          <Button
+                            variant={"outline"}
+                            size={"sm"}
+                            className="gap-1.5 transition-all duration-300 hover:gap-2.5"
+                          >
+                            Details
+                            <Eye className="size-4"/>
+                          </Button>
+                        </Link>
+                      )}
+                  </div>
+            </div>
+            {job.failedReason && (
+              <div className="mt-4 text-sm text-red-600 bg-red-50 border border-red-100 rounded-md p-3 flex items-start gap-2">
+                <AlertTriangle className="h-5 w-5 shrink text-red-500">
+                <p className="leading-relaxed">
+                  {job.failedReason}
+                </p>
+                </AlertTriangle>
+              </div>
+            )}
         </div>
       </div>
     </Card>

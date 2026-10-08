@@ -53,34 +53,34 @@ export interface VideoStatus {
 }
 
 export interface JobStatus {
-  id: string;
-  state: "waiting" | "active" | "completed" | "failed" | "delayed";
-  progress: number;
-  result?: {
-    videoInfo?: VideoInfo;
-    transcription?: {
-      transcription?: {
-        text: string;
-        segments: Array<{
-          start: number;
-          end: number;
-          text: string;
-        }>;
-      };
-      analysis?: {
-        summary: string;
-        keyPoints: string[];
-        topics: string[];
-        suggestedTags: string[];
-      };
-      error?: string;
-      final?: boolean;
-    };
-    failedReason?: string;
+    id: string;
+    state: "waiting" | "active" | "completed" | "failed" | "delayed";
+    progress: number;
     attempts: number;
     videoStatus?: VideoStatus;
+    failedReason?: string;
     final: boolean;
-  };
+    result?: {
+        videoInfo?: VideoInfo;
+        transcription?: {
+            data?: {
+                text: string;
+                segments: Array<{
+                    start: number;
+                    end: number;
+                    text: string;
+                }>;
+            };
+            analysis?: {
+                summary: string;
+                keyPoints: string[];
+                topics: string[];
+                suggestedTags: string[];
+            };
+            error?: string;
+            final?: boolean;
+        };
+    };
 }
 
 export interface VideoSubmissiionRequest {
