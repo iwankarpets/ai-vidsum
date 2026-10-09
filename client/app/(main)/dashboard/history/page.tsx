@@ -1,4 +1,6 @@
-import { Button } from "@/components/ui/button";
+"use client";
+
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
   Select,
@@ -18,12 +20,12 @@ export default function HistoryPage() {
   const [filter, setFilter] = useState<string>("all");
   const { data, isLoading, error, refetch } = useAllJobs();
 
-  if (error) {
+  if (error && !data) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
+      <div className="flex min-h-[400px] flex-col items-center justify-center gap-4">
         <AlertCircle className="size-12 text-red-500" />
         <p className="text-lg font-medium text-red-500">Failed to load jobs</p>
-        <Button onClick={() => refetch()} variant={"outline"}>
+        <Button onClick={() => void refetch()} variant="outline">
           Try Again
         </Button>
       </div>
@@ -48,17 +50,17 @@ export default function HistoryPage() {
     );
   }
 
-  if (!data.jobs?.length) {
+  if (!data.jobs.length) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
-        <Clock className="size-12 text-muted foreground" />
-        <p className="text-sm text-muted foreground">No jobs found</p>
-        <p className="text-sm text-muted foreground">
+      <div className="flex min-h-[400px] flex-col items-center justify-center gap-4">
+        <Clock className="size-12 text-muted-foreground" />
+        <p className="text-sm text-muted-foreground">No jobs found</p>
+        <p className="text-sm text-muted-foreground">
           Start creating a new job to see it here
         </p>
-        <Button variant={"outline"} asChild>
-          <Link href={"/dashboard/create"}>Create Job</Link>
-        </Button>
+        <Link href="/dashboard/create" className={buttonVariants({ variant: "outline" })}>
+          Create Job
+        </Link>
       </div>
     );
   }
@@ -79,14 +81,12 @@ export default function HistoryPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl" font-bold tracking-tight>
-            Video Jobs
-          </h1>
-          <p className="text-muted foreground">
+          <h1 className="text-2xl font-bold tracking-tight">Video Jobs</h1>
+          <p className="text-muted-foreground">
             Track the status of your processing jobs
           </p>
         </div>
-        <Select value={filter} onValueChange={setFilter}>
+        <Select value={filter} onValueChange={(value) => setFilter(value ?? "all")}>
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Filter by status" />
           </SelectTrigger>
@@ -95,14 +95,19 @@ export default function HistoryPage() {
             <SelectItem value="active">Active Jobs</SelectItem>
             <SelectItem value="completed">Completed Jobs</SelectItem>
             <SelectItem value="failed">Failed Jobs</SelectItem>
-            <SelectItem value="all">Delayed Jobs</SelectItem>
+            <SelectItem value="delayed">Delayed Jobs</SelectItem>
           </SelectContent>
         </Select>
       </div>
+
       <div className="space-y-4">
-        {filteredJobs.map((job) => (
-          <JobCard key={job.id} job={job} />
-        ))}
+        {filteredJobs.length === 0 ? (
+          <p className="py-12 text-center text-sm text-muted-foreground">
+            No jobs match this filter
+          </p>
+        ) : (
+          filteredJobs.map((job) => <JobCard key={job.id} job={job} />)
+        )}
       </div>
     </div>
   );

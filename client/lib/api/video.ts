@@ -1,45 +1,41 @@
-import { apiClient } from "./client";
+import { apiClient } from './client';
 import {
-  ApiSuccessResponse,
-  JobsListResponse,
-  JobStatus,
-  Video,
-  VideoSubmissiionRequest,
-  VideoSubmissionResponse,
-} from "./types";
+  type ApiSuccessResponse,
+  type JobsListResponse,
+  type JobStatus,
+  type Video,
+  type VideoSubmissionRequest,
+  type VideoSubmissionResponse,
+} from './types';
 
 export const submitVideo = async (
-  data: VideoSubmissiionRequest,
+  data: VideoSubmissionRequest,
 ): Promise<VideoSubmissionResponse> => {
-  const response = await apiClient.post<
-    ApiSuccessResponse<VideoSubmissionResponse>
-  >("/videos/transcribe", data);
-
+  const response = await apiClient.post<ApiSuccessResponse<VideoSubmissionResponse>>(
+    '/video/transcribe',
+    data,
+  );
   return response.data.data;
 };
 
-export const getJobStatus = async (jobId: string): Promise<JobStatus> => {
+export const getJobStatus = async (jobId: string | number): Promise<JobStatus> => {
   const response = await apiClient.get<ApiSuccessResponse<JobStatus>>(
-    `/videos/transcribe/${jobId}/status`,
+    `/video/transcribe/${jobId}/status`,
   );
   return response.data.data;
 };
 
 export const getAllJobs = async (): Promise<JobsListResponse> => {
-  const response =
-    await apiClient.post<ApiSuccessResponse<JobStatus[]>>(
-      `/videos/jobs/running`,
-    );
+  const response = await apiClient.post<ApiSuccessResponse<JobStatus[]>>('/video/jobs/running');
   return { jobs: response.data.data };
 };
 
 export const getUserVideos = async (): Promise<Video[]> => {
-  const response = await apiClient.get<ApiSuccessResponse<Video[]>>("/videos");
+  const response = await apiClient.get<ApiSuccessResponse<Video[]>>('/video');
   return response.data.data;
 };
 
 export const getVideoById = async (videoId: string): Promise<Video> => {
-  const response =
-    await apiClient.get<ApiSuccessResponse<Video>>("/videos/${videoId}");
+  const response = await apiClient.get<ApiSuccessResponse<Video>>(`/video/${videoId}`);
   return response.data.data;
 };

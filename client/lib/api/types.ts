@@ -1,9 +1,9 @@
 export interface User {
   id: string;
   email: string;
-  name: string;
+  name: string | null;
   isEmailVerified: boolean;
-  lastLoginAt: string;
+  lastLogin: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -25,15 +25,19 @@ export interface AuthResponse {
 }
 
 export interface ApiSuccessResponse<T> {
-  status: "success";
+  status: 'success';
   data: T;
 }
 
 export interface ApiErrorData {
-  status: "error";
+  status: 'error';
   message: string;
   code?: string;
 }
+
+export type Sentiment = 'positive' | 'negative' | 'neutral';
+export type VideoProcessingStatus = 'pending' | 'processing' | 'completed' | 'failed';
+export type JobState = 'waiting' | 'active' | 'completed' | 'failed' | 'delayed';
 
 export interface VideoInfo {
   title: string;
@@ -42,53 +46,57 @@ export interface VideoInfo {
   author: string;
   videoUrl: string;
   thumbnail: string;
-  url: string;
 }
 
 export interface VideoStatus {
-  id: number;
-  status: string;
+  id: string;
+  status: VideoProcessingStatus;
   hasTranscription: boolean;
   hasAnalysis: boolean;
+  title: string | null;
+  thumbnail: string | null;
+}
+
+export interface TranscriptionResult {
+  text: string;
+  confidence: number;
+  isMusic?: boolean;
+}
+
+export interface AIAnalysis {
+  summary: string;
+  keyPoints: string[];
+  sentiment: Sentiment;
+  topics: string[];
+  suggestedTags: string[];
+}
+
+export interface JobResult {
+  videoInfo?: VideoInfo;
+  transcription?: TranscriptionResult;
+  analysis?: AIAnalysis;
+  status: string;
+  error?: string;
+  final?: boolean;
 }
 
 export interface JobStatus {
-    id: string;
-    state: "waiting" | "active" | "completed" | "failed" | "delayed";
-    progress: number;
-    attempts: number;
-    videoStatus?: VideoStatus;
-    failedReason?: string;
-    final: boolean;
-    result?: {
-        videoInfo?: VideoInfo;
-        transcription?: {
-            data?: {
-                text: string;
-                segments: Array<{
-                    start: number;
-                    end: number;
-                    text: string;
-                }>;
-            };
-            analysis?: {
-                summary: string;
-                keyPoints: string[];
-                topics: string[];
-                suggestedTags: string[];
-            };
-            error?: string;
-            final?: boolean;
-        };
-    };
+  id: string | number;
+  state: JobState;
+  progress: number;
+  attempts: number;
+  videoStatus?: VideoStatus | null;
+  failedReason?: string;
+  final?: boolean;
+  result?: JobResult;
 }
 
-export interface VideoSubmissiionRequest {
+export interface VideoSubmissionRequest {
   url: string;
 }
 
 export interface VideoSubmissionResponse {
-  jobId: string;
+  jobId: string | number;
   videoInfo: VideoInfo;
   message: string;
 }
@@ -97,7 +105,7 @@ export interface JobsListResponse {
   jobs: JobStatus[];
 }
 
-export interface VideoTranscriptrion {
+export interface VideoTranscription {
   text: string;
   confidence: number;
   isMusic: boolean;
@@ -106,23 +114,24 @@ export interface VideoTranscriptrion {
 
 export interface VideoAnalysis {
   summary: string;
-  keyPoints: string;
-  sentiment: string;
+  keyPoints: string[];
+  sentiment: Sentiment;
   topics: string[];
   suggestedTags: string[];
   createdAt: string;
 }
 
 export interface Video {
-  id: number;
+  id: string;
   url: string;
   title: string;
-  description: string;
+  description: string | null;
   duration: number;
-  author: string;
-  status: string;
+  author: string | null;
+  thumbnail: string | null;
+  status: VideoProcessingStatus;
   createdAt: string;
   updatedAt: string;
-  transcription: VideoTranscriptrion | null;
+  transcription: VideoTranscription | null;
   analysis: VideoAnalysis | null;
 }
