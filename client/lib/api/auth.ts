@@ -21,9 +21,15 @@ export const authApi = {
     return response.data.data;
   },
 
-  async getCurrentUser(): Promise<User> {
-    const response = await apiClient.get<ApiSuccessResponse<User>>('/auth/me');
-    return response.data.data;
+  async getCurrentUser(): Promise<AuthResponse> {
+    const response = await apiClient.get<ApiSuccessResponse<AuthResponse>>('/auth/me');
+    const data = response.data.data;
+
+    if(data.token && typeof window !== 'undefined') {
+      localStorage.setItem('token', data.token);
+    }
+
+    return data;
   },
 
   async verifyEmail(token: string): Promise<{ message: string }> {

@@ -1,6 +1,9 @@
+'use client';
+
 import { createContext, useContext, useEffect, useState } from 'react';
-import { RegisterPayload, type User } from '../api/types';
 import { useRouter } from 'next/navigation';
+import { useQueryClient } from '@tanstack/react-query';
+import { type User } from '../api/types';
 import { setTokenGetter } from '../api/client';
 import { authApi } from '../api/auth';
 
@@ -9,7 +12,6 @@ interface AuthContextType {
   loading: boolean;
   token: string | null;
   login: (token: string, user: User) => void;
-  register: (data: RegisterPayload) => Promise<void>;
   logout: () => void;
 }
 
@@ -20,61 +22,54 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+  const queryClient = useQueryClient();
 
   useEffect(() => {
-    setTokenGetter(() => token);
-  }, [token]);
+    const storedToken = localStorage.getItem('token');
+    if (!storedToken) {
+      setLoading(false);
+      return;
+    }
 
-  useEffect(() => {
-  const storedToken = localStorage.getItem('token');
-  if (storedToken) {
-    setToken(storedToken);
     setTokenGetter(() => storedToken);
+    setToken(storedToken);
 
     authApi
       .getCurrentUser()
-      .then((currentUser) => {
+      .then(({ user: currentUser, token: freshToken }) => {
+        localStorage.setItem('token', freshToken);
+        setTokenGetter(() => freshToken);
+        setToken(freshToken);
         setUser(currentUser);
       })
       .catch(() => {
+        localStorage.removeItem('token');
+        setTokenGetter(() => null);
         setToken(null);
       })
       .finally(() => {
         setLoading(false);
       });
-  } else {
-    setLoading(false);
-  }
-}, []);
+  }, []);
 
-  useEffect(() => {
-    if (token) {
-      localStorage.setItem('token', token);
-    } else {
-      localStorage.removeItem('token');
-    }
-  }, [token]);
-
- const login = (newToken: string, newUser: User) => {
-   console.log('login() called with token:', newToken); 
-  setToken(newToken);
-  setUser(newUser);
-  setTokenGetter(() => newToken);
-};
-  const logout = () => {
-    setToken(null);
-    setUser(null);
-    router.push('/auth/login');
-  };
-
-  const register = async (data: RegisterPayload) => {
-    const { token: newToken, user: newUser } = await authApi.register(data);
+  const login = (newToken: string, newUser: User) => {
+    localStorage.setItem('token', newToken);
+    setTokenGetter(() => newToken);
     setToken(newToken);
     setUser(newUser);
   };
 
+  const logout = () => {
+    localStorage.removeItem('token');
+    setTokenGetter(() => null);
+    setToken(null);
+    setUser(null);
+    queryClient.clear();
+    router.push('/auth/login');
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, token, login, register, logout }}>
+    <AuthContext.Provider value={{ user, loading, token, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

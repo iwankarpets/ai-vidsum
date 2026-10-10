@@ -10,7 +10,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useAllJobs } from "@/lib/hooks/queries/video";
+import { useAllJobs } from "@/lib/hooks/queries/videos";
 import { AlertCircle, Clock } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";

@@ -1,41 +1,37 @@
-import { type JobState, type Video } from '@/lib/api/types';
-import { getAllJobs, getJobStatus, getUserVideos, getVideoById } from '@/lib/api/video';
-import { useQuery } from '@tanstack/react-query';
+import { getAllJobs } from "@/lib/api/video";
+import { useQuery } from "@tanstack/react-query";
 
-const ACTIVE_STATES: JobState[] = ['waiting', 'active', 'delayed'];
-
-export function useAllJobs() {
-  return useQuery({
-    queryKey: ['jobs'],
-    queryFn: getAllJobs,
-    refetchInterval: 5000,
-  });
+interface VideoProcessingStatus{
+    isProccesing: boolean;
+    videoTitle?: string;
+    progress?: number;
+    error?: string;
 }
 
-export function useJobStatus(jobId: string | number) {
-  return useQuery({
-    queryKey: ['job-status', jobId],
-    queryFn: () => getJobStatus(jobId),
-    refetchInterval: (query) => {
-      const state = query.state.data?.state;
-      return state && ACTIVE_STATES.includes(state) ? 3000 : false;
-    },
-    staleTime: 0,
-    refetchOnWindowFocus: true,
-  });
-}
+export function useVideoProcessingStatus() {
+    return useQuery<VideoProcessingStatus>({
+        queryKey: ["runningJobs"],
+        queryFn: async () => {
+            const { jobs } = await getAllJobs();
+            if(!jobs.length){
+                return {isProccesing: false};
+            }
 
-export function useUserVideos() {
-  return useQuery<Video[]>({
-    queryKey: ['videos'],
-    queryFn: getUserVideos,
-  });
-}
+            const activeJob = jobs.find(job => job.state === "active" || job.state === "waiting");
+            if(!activeJob){
+                return {isProccesing: false};
+            }
 
-export function useVideoById(videoId: string) {
-  return useQuery<Video>({
-    queryKey: ['video', videoId],
-    queryFn: () => getVideoById(videoId),
-    enabled: !!videoId,
-  });
+            return {
+                isProccesing: true,
+                videoTitle: activeJob.result?.videoInfo?.title || "Processing value...",
+                progress: activeJob.progress,
+                error: activeJob.failedReason
+            };
+
+        },
+
+        refetchInterval: 5000,
+        refetchIntervalInBackground:false
+    });
 }
