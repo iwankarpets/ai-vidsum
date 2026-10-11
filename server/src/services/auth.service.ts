@@ -6,9 +6,14 @@ import crypto from 'crypto';
 import jwt, { type Secret, type SignOptions } from 'jsonwebtoken';
 import { EmailService } from './email.service.js';
 import logger from '../utils/logger.js';
+import { IsNull } from 'typeorm';
+import { RefreshToken } from '../entities/refresh-token.entity.js';
+import { REFRESH_TTL_MS } from '../config/auth.js'
+import { toPublicUser } from '../utils/user.js';
 
 export class AuthService {
   private static readonly userRepository = AppDataSource.getRepository(User);
+  private static readonly refreshTokenRepository = AppDataSource.getRepository(RefreshToken);
   private static readonly JWT_SECRET: Secret = process.env.JWT_SECRET || 'secret';
   private static readonly JWT_EXPIRES_IN: NonNullable<SignOptions['expiresIn']> =
     (process.env.JWT_EXPIRES_IN as SignOptions['expiresIn']) ?? '1d';
@@ -41,8 +46,9 @@ export class AuthService {
 
     await EmailService.sendVerificationEmail(email, emailVerificationToken);
 
-    const token = this.generateToken(user);
-    return { user, token };
+   const token = this.generateToken(user);
+const refreshToken = await this.issueRefreshToken(user);
+return { user: toPublicUser(user), token, refreshToken };
   }
 
   static generateToken(user: User): string {
@@ -150,10 +156,8 @@ export class AuthService {
     await this.userRepository.save(user);
 
     const token = this.generateToken(user);
-
-    const { password: _password, ...safeUser } = user;
-
-    return { user: safeUser, token };
+  const refreshToken = await this.issueRefreshToken(user);
+  return { user: toPublicUser(user), token, refreshToken };
   }
 
   static verifyToken(token: string): { userId: string; email: string } {
@@ -180,4 +184,41 @@ export class AuthService {
 
     return user;
   }
+
+  private static hashToken(token: string): string {
+    return crypto.createHash('sha256').update(token).digest('hex');
+  }
+
+  private static async issueRefreshToken(user: User): Promise<string> {
+    const rawToken = crypto.randomBytes(48).toString('hex');
+
+    const entity = new RefreshToken();
+    entity.tokenHash = this.hashToken(rawToken);
+    entity.expiresAt = new Date(Date.now() + REFRESH_TTL_MS);
+    entity.revokedAt = null;
+    entity.user = user;
+    await this.refreshTokenRepository.save(entity);
+
+    return rawToken; 
+}
+
+static async refresh(rawToken: string) {
+  const stored = await this.refreshTokenRepository.findOne({
+    where: { tokenHash: this.hashToken(rawToken) },
+    relations: ['user'],
+  });
+
+  if (!stored || stored.revokedAt || stored.expiresAt < new Date()) {
+    throw new AppError(StatusCodes.UNAUTHORIZED, 'Invalid refresh token', 'INVALID_REFRESH_TOKEN');
+  }
+
+  return { user: toPublicUser(stored.user), token: this.generateToken(stored.user) };
+}
+
+static async logout(rawToken: string): Promise<void> {
+  await this.refreshTokenRepository.update(
+    { tokenHash: this.hashToken(rawToken), revokedAt: IsNull() },
+    { revokedAt: new Date() },
+  );
+}
 }

@@ -3,11 +3,19 @@ import { AuthService } from '../services/auth.service.js';
 import { successResponse } from '../utils/response.js';
 import { StatusCodes } from 'http-status-codes';
 import { AppError } from '../utils/errors.js';
+import { toPublicUser } from '../utils/user.js';
+import { REFRESH_COOKIE, refreshCookieOptions, clearCookieOptions } from '../config/auth.js';
 import type {
-  LoginInput,
   RegisterInput,
+  LoginInput,
   ResendVerificationInput,
 } from '../validations/auth.validation.js';
+
+const readRefreshCookie = (req: Request): string | undefined => {
+  const cookies = req.cookies as Record<string, unknown> | undefined;
+  const value = cookies?.[REFRESH_COOKIE];
+  return typeof value === 'string' && value ? value : undefined;
+};
 
 export class AuthController {
   static async register(
@@ -17,8 +25,12 @@ export class AuthController {
   ) {
     try {
       const { email, password, name } = req.body;
-      const result = await AuthService.register(email, password, name);
-      res.status(StatusCodes.CREATED).json(successResponse(result));
+      const { refreshToken, ...body } = await AuthService.register(email, password, name);
+
+      res
+        .status(StatusCodes.CREATED)
+        .cookie(REFRESH_COOKIE, refreshToken, refreshCookieOptions)
+        .json(successResponse(body));
     } catch (error) {
       next(error);
     }
@@ -31,8 +43,40 @@ export class AuthController {
   ) {
     try {
       const { email, password } = req.body;
-      const result = await AuthService.login(email, password);
+      const { refreshToken, ...body } = await AuthService.login(email, password);
+
+      res.cookie(REFRESH_COOKIE, refreshToken, refreshCookieOptions).json(successResponse(body));
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async refresh(req: Request, res: Response, next: NextFunction) {
+    try {
+      const rawToken = readRefreshCookie(req);
+
+      if (!rawToken) {
+        throw new AppError(StatusCodes.UNAUTHORIZED, 'No refresh token', 'NO_REFRESH_TOKEN');
+      }
+
+      const result = await AuthService.refresh(rawToken);
       res.json(successResponse(result));
+    } catch (error) {
+      res.clearCookie(REFRESH_COOKIE, clearCookieOptions);
+      next(error);
+    }
+  }
+
+  static async logout(req: Request, res: Response, next: NextFunction) {
+    try {
+      const rawToken = readRefreshCookie(req);
+
+      if (rawToken) {
+        await AuthService.logout(rawToken);
+      }
+
+      res.clearCookie(REFRESH_COOKIE, clearCookieOptions);
+      res.json(successResponse({ message: 'Logged out' }));
     } catch (error) {
       next(error);
     }
@@ -70,12 +114,13 @@ export class AuthController {
   static async getProfile(req: Request, res: Response, next: NextFunction) {
     try {
       const userId = req.user?.userId;
+
       if (!userId) {
         throw new AppError(StatusCodes.UNAUTHORIZED, 'User not authenticated', 'UNAUTHORIZED');
       }
 
-      const result = await AuthService.getUserById(userId);
-      res.json(successResponse(result));
+      const user = await AuthService.getUserById(userId);
+      res.json(successResponse(toPublicUser(user)));
     } catch (error) {
       next(error);
     }

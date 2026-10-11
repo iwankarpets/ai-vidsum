@@ -15,6 +15,8 @@ import { ExpressAdapter } from '@bull-board/express';
 import { createBullBoard } from '@bull-board/api';
 import { BullAdapter } from '@bull-board/api/bullAdapter';
 import { type RequestHandler } from 'express';
+import cookieParser from 'cookie-parser';
+import { requireEnv } from './config/env.js';
 
 const app: Express = express();
 const port = process.env.PORT || 5000;
@@ -55,7 +57,8 @@ const initialize = async () => {
   }
 };
 
-app.use(cors());
+app.use(cors({ origin: requireEnv('FRONTEND_URL'), credentials: true }));
+app.use(cookieParser());
 app.use(express.json());
 app.use(morgan(process.env.NODE_ENV === 'development' ? 'dev' : 'combined', { stream }));
 

@@ -11,6 +11,8 @@ import { AIService } from './ai.service.js';
 import { AppError } from '../utils/errors.js';
 import logger from '../utils/logger.js';
 import { StatusCodes } from 'http-status-codes';
+import { MoreThanOrEqual } from 'typeorm';
+import { LIMITS } from '../config/limits.js';
 
 const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000;
 
@@ -63,7 +65,6 @@ export class JobsService {
         port: parseInt(process.env.REDIS_PORT || '6379'),
       },
       settings: {
-        // Долгие джобы (скачивание, конвертация, аплоад) не должны считаться зависшими
         lockDuration: 5 * 60 * 1000,
         lockRenewTime: 60 * 1000,
         stalledInterval: 60 * 1000,
@@ -226,9 +227,11 @@ export class JobsService {
 
   static async addTranscriptionJob(
     url: string,
-    videoInfo?: VideoInfo,
-    user?: User,
+    videoInfo: VideoInfo,
+    user: User,
   ): Promise<{ jobId: string | number }> {
+    await this.assertWithinLimits(user.id, videoInfo.duration);
+
     let video = await this.videoRepository.findOne({ where: { url } });
 
     if (!video) {
@@ -252,8 +255,8 @@ export class JobsService {
 
     const job = await this.transcriptionQueue.add({
       url,
-      ...(videoInfo !== undefined && { videoInfo }),
-      userId: user?.id ?? '',
+      videoInfo,
+      userId: user.id,
     });
 
     return { jobId: job.id };
@@ -286,6 +289,7 @@ export class JobsService {
       result,
       failedReason,
       attempts,
+      thumbnail: result?.videoInfo?.thumbnail || null,
       videoStatus,
       final: result?.final || state === 'completed' || attempts >= 3,
     };
@@ -321,6 +325,8 @@ export class JobsService {
           attempts: job.attemptsMade,
           result: parseJobResult(job.returnvalue),
           failedReason: job.failedReason,
+          thumbnail: job.data?.videoInfo?.thumbnail || null,
+          duration: job.data?.videoInfo?.duration || null,
           videoStatus,
         };
       }),
@@ -348,4 +354,28 @@ export class JobsService {
       thumbnail: video.thumbnail,
     };
   }
+
+  private static async assertWithinLimits(userId: string, durationSeconds: number) {
+  if (durationSeconds > LIMITS.maxVideoDurationSeconds) {
+    const maxMinutes = Math.floor(LIMITS.maxVideoDurationSeconds / 60);
+    throw new AppError(
+      StatusCodes.BAD_REQUEST,
+      `Video is too long. Maximum length is ${maxMinutes} minutes`,
+      'VIDEO_TOO_LONG',
+    );
+  }
+
+  const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
+  const videosToday = await this.videoRepository.count({
+    where: { user: { id: userId }, createdAt: MoreThanOrEqual(since) },
+  });
+
+  if (videosToday >= LIMITS.maxVideosPerDay) {
+    throw new AppError(
+      StatusCodes.TOO_MANY_REQUESTS,
+      `Daily limit of ${LIMITS.maxVideosPerDay} videos reached. Try again later`,
+      'DAILY_LIMIT_EXCEEDED',
+    );
+  }
+}
 }
