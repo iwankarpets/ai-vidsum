@@ -1,23 +1,23 @@
-"use client";
+'use client';
 
-import { Button, buttonVariants } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Button, buttonVariants } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Skeleton } from "@/components/ui/skeleton";
-import { useAllJobs } from "@/lib/hooks/queries/videos";
-import { AlertCircle, Clock } from "lucide-react";
-import Link from "next/link";
-import { useState } from "react";
-import { JobCard } from "../components/job-card";
+} from '@/components/ui/select';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useAllJobs } from '@/lib/hooks/queries/videos';
+import { AlertCircle, Clock } from 'lucide-react';
+import Link from 'next/link';
+import { useState } from 'react';
+import { JobCard } from '../components/job-card';
 
 export default function HistoryPage() {
-  const [filter, setFilter] = useState<string>("all");
+  const [filter, setFilter] = useState<string>('all');
   const { data, isLoading, error, refetch } = useAllJobs();
 
   if (error && !data) {
@@ -55,10 +55,8 @@ export default function HistoryPage() {
       <div className="flex min-h-[400px] flex-col items-center justify-center gap-4">
         <Clock className="size-12 text-muted-foreground" />
         <p className="text-sm text-muted-foreground">No jobs found</p>
-        <p className="text-sm text-muted-foreground">
-          Start creating a new job to see it here
-        </p>
-        <Link href="/dashboard/create" className={buttonVariants({ variant: "outline" })}>
+        <p className="text-sm text-muted-foreground">Start creating a new job to see it here</p>
+        <Link href="/dashboard/create" className={buttonVariants({ variant: 'outline' })}>
           Create Job
         </Link>
       </div>
@@ -66,12 +64,12 @@ export default function HistoryPage() {
   }
 
   const filteredJobs = data.jobs.filter((job) => {
-    if (filter === "all") {
+    if (filter === 'all') {
       return true;
     }
 
-    if (filter === "active") {
-      return job.state === "active" || job.state === "waiting";
+    if (filter === 'active') {
+      return job.state === 'active' || job.state === 'waiting';
     }
 
     return job.state === filter;
@@ -82,11 +80,9 @@ export default function HistoryPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Video Jobs</h1>
-          <p className="text-muted-foreground">
-            Track the status of your processing jobs
-          </p>
+          <p className="text-muted-foreground">Track the status of your processing jobs</p>
         </div>
-        <Select value={filter} onValueChange={(value) => setFilter(value ?? "all")}>
+        <Select value={filter} onValueChange={(value) => setFilter(value ?? 'all')}>
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Filter by status" />
           </SelectTrigger>

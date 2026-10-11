@@ -1,11 +1,5 @@
 'use client';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { authApi } from '@/lib/api/auth';
 import axios from 'axios';
 import { Loader2, MailCheck } from 'lucide-react';
@@ -64,9 +58,7 @@ export default function VerifyEmailPage() {
           <MailCheck className="size-6 text-primary" />
         </div>
         <CardTitle className="text-2xl">Email Verification</CardTitle>
-        <CardDescription>
-          Please verify your email to continue using our platform
-        </CardDescription>
+        <CardDescription>Please verify your email to continue using our platform</CardDescription>
       </CardHeader>
       <CardContent className="flex items-center justify-center py-6">
         <Loader2 className="size-6 animate-spin text-muted-foreground" />

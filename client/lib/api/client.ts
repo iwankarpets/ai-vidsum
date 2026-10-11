@@ -15,7 +15,6 @@ export const setSessionExpiredHandler = (handler: (() => void) | null) => {
   onSessionExpired = handler;
 };
 
-
 export const refreshSession = (): Promise<AuthResponse> => {
   refreshPromise ??= axios
     .post<ApiSuccessResponse<AuthResponse>>(`${BASE_URL}/auth/refresh`, undefined, {

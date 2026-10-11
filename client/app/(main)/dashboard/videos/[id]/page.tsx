@@ -1,11 +1,11 @@
-"use client";
+'use client';
 
-import { Button, buttonVariants } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
-import { useVideoById } from "@/lib/hooks/queries/videos";
-import { type Video } from "@/lib/api/types";
-import { cn } from "cn";
+import { Button, buttonVariants } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useVideoById } from '@/lib/hooks/queries/videos';
+import { type Video } from '@/lib/api/types';
+import { cn } from 'cn';
 import {
   AlertCircle,
   ArrowLeft,
@@ -14,31 +14,31 @@ import {
   ExternalLink,
   UserIcon,
   VideoIcon,
-} from "lucide-react";
-import Link from "next/link";
-import { useParams } from "next/navigation";
-import { toast } from "sonner";
+} from 'lucide-react';
+import Link from 'next/link';
+import { useParams } from 'next/navigation';
+import { toast } from 'sonner';
 
-const statusStyles: Record<Video["status"], string> = {
-  pending: "bg-yellow-50 text-yellow-700 ring-1 ring-inset ring-yellow-600/20",
-  processing: "bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-600/20",
-  completed: "bg-green-50 text-green-700 ring-1 ring-inset ring-green-600/20",
-  failed: "bg-red-50 text-red-700 ring-1 ring-inset ring-red-600/20",
+const statusStyles: Record<Video['status'], string> = {
+  pending: 'bg-yellow-50 text-yellow-700 ring-1 ring-inset ring-yellow-600/20',
+  processing: 'bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-600/20',
+  completed: 'bg-green-50 text-green-700 ring-1 ring-inset ring-green-600/20',
+  failed: 'bg-red-50 text-red-700 ring-1 ring-inset ring-red-600/20',
 };
 
 const sentimentStyles = {
-  positive: "bg-green-50 text-green-700 ring-1 ring-inset ring-green-600/20",
-  negative: "bg-red-50 text-red-700 ring-1 ring-inset ring-red-600/20",
-  neutral: "bg-gray-100 text-gray-700 ring-1 ring-inset ring-gray-500/20",
+  positive: 'bg-green-50 text-green-700 ring-1 ring-inset ring-green-600/20',
+  negative: 'bg-red-50 text-red-700 ring-1 ring-inset ring-red-600/20',
+  neutral: 'bg-gray-100 text-gray-700 ring-1 ring-inset ring-gray-500/20',
 };
 
 function formatDuration(totalSeconds: number): string {
   const hours = Math.floor(totalSeconds / 3600);
   const minutes = Math.floor((totalSeconds % 3600) / 60);
   const seconds = totalSeconds % 60;
-  const ss = String(seconds).padStart(2, "0");
+  const ss = String(seconds).padStart(2, '0');
   if (hours > 0) {
-    return `${hours}:${String(minutes).padStart(2, "0")}:${ss}`;
+    return `${hours}:${String(minutes).padStart(2, '0')}:${ss}`;
   }
   return `${minutes}:${ss}`;
 }
@@ -57,7 +57,7 @@ function BackLink() {
 
 export default function VideoDetailsPage() {
   const params = useParams();
-  const id = typeof params.id === "string" ? params.id : "";
+  const id = typeof params.id === 'string' ? params.id : '';
   const { data: video, isLoading, error, refetch } = useVideoById(id);
 
   if (isLoading) {
@@ -87,7 +87,7 @@ export default function VideoDetailsPage() {
   }
 
   const { transcription, analysis } = video;
-  const isInProgress = video.status === "pending" || video.status === "processing";
+  const isInProgress = video.status === 'pending' || video.status === 'processing';
 
   const copyTranscript = () => {
     if (!transcription) {
@@ -95,8 +95,8 @@ export default function VideoDetailsPage() {
     }
     void navigator.clipboard
       .writeText(transcription.text)
-      .then(() => toast.success("Transcript copied"))
-      .catch(() => toast.error("Could not copy transcript"));
+      .then(() => toast.success('Transcript copied'))
+      .catch(() => toast.error('Could not copy transcript'));
   };
 
   return (
@@ -121,7 +121,7 @@ export default function VideoDetailsPage() {
               <h1 className="text-2xl font-bold tracking-tight">{video.title}</h1>
               <span
                 className={cn(
-                  "shrink-0 rounded-full px-2.5 py-1 text-xs font-medium capitalize",
+                  'shrink-0 rounded-full px-2.5 py-1 text-xs font-medium capitalize',
                   statusStyles[video.status],
                 )}
               >
@@ -151,7 +151,7 @@ export default function VideoDetailsPage() {
               href={video.url}
               target="_blank"
               rel="noopener noreferrer"
-              className={buttonVariants({ variant: "outline", size: "sm", className: "gap-1.5" })}
+              className={buttonVariants({ variant: 'outline', size: 'sm', className: 'gap-1.5' })}
             >
               Open original
               <ExternalLink className="size-3.5" />
@@ -162,14 +162,14 @@ export default function VideoDetailsPage() {
 
       {isInProgress && (
         <Card className="p-6 text-sm text-muted-foreground">
-          This video is still being processed. Results will appear here when it is done.{" "}
+          This video is still being processed. Results will appear here when it is done.{' '}
           <Link href="/dashboard/history" className="font-medium text-foreground underline">
             Track progress
           </Link>
         </Card>
       )}
 
-      {video.status === "failed" && (
+      {video.status === 'failed' && (
         <Card className="border-red-100 bg-red-50 p-6 text-sm text-red-600">
           Processing failed for this video. Try submitting it again.
         </Card>
@@ -182,7 +182,7 @@ export default function VideoDetailsPage() {
               <h2 className="text-lg font-semibold">Summary</h2>
               <span
                 className={cn(
-                  "rounded-full px-2.5 py-1 text-xs font-medium capitalize",
+                  'rounded-full px-2.5 py-1 text-xs font-medium capitalize',
                   sentimentStyles[analysis.sentiment],
                 )}
               >

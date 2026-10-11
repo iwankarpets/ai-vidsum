@@ -1,19 +1,19 @@
-"use client";
+'use client';
 
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
-import { Field, FieldError, FieldLabel } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
-import { useLogin } from "@/lib/hooks/queries/auth";
-import { loginSchema, LoginSchema } from "@/lib/validations/auth";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { ExclamationTriangleIcon } from "@radix-ui/react-icons";
-import { Loader2 } from "lucide-react";
-import { useState } from "react";
-import { Controller, useForm } from "react-hook-form";
-import axios from "axios";
-import Link from "next/link";
-import { ApiErrorData } from "@/lib/api/types";
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import { Field, FieldError, FieldLabel } from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
+import { useLogin } from '@/lib/hooks/queries/auth';
+import { loginSchema, LoginSchema } from '@/lib/validations/auth';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { ExclamationTriangleIcon } from '@radix-ui/react-icons';
+import { Loader2 } from 'lucide-react';
+import { useState } from 'react';
+import { Controller, useForm } from 'react-hook-form';
+import axios from 'axios';
+import Link from 'next/link';
+import { ApiErrorData } from '@/lib/api/types';
 
 export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
@@ -22,8 +22,8 @@ export default function LoginPage() {
   const form = useForm<LoginSchema>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      email: "",
-      password: "",
+      email: '',
+      password: '',
     },
   });
 
@@ -33,17 +33,17 @@ export default function LoginPage() {
       await login.mutateAsync(data);
     } catch (error: unknown) {
       if (!axios.isAxiosError<ApiErrorData>(error)) {
-        setError("Something went wrong. Please try again");
+        setError('Something went wrong. Please try again');
         return;
       }
 
       const errorMessage = error.response?.data?.message;
       if (error.response?.data?.code === 'INVALID_CREDENTIALS') {
-          setError('Invalid email or password. Please try again');
+        setError('Invalid email or password. Please try again');
       } else if (error.response?.data?.code === 'EMAIL_NOT_VERIFIED') {
-          setError('Please verify your email before logging in.');
+        setError('Please verify your email before logging in.');
       } else {
-        setError(errorMessage || "Something went wrong. Please try again");
+        setError(errorMessage || 'Something went wrong. Please try again');
       }
     }
   };
@@ -52,9 +52,7 @@ export default function LoginPage() {
     <div>
       <div className="flex flex-col space-y-2 text-center">
         <h1 className="text-2xl font-semibold tracking-tight">Welcome back</h1>
-        <p className="text-sm text-muted-foreground">
-          Enter your credentials to sign in
-        </p>
+        <p className="text-sm text-muted-foreground">Enter your credentials to sign in</p>
       </div>
 
       {error && (
@@ -107,10 +105,7 @@ export default function LoginPage() {
           )}
         />
         <div className="flex items-center justify-end">
-          <Link
-            href="/auth/register"
-            className="text-sm text-muted-foreground hover:text-primary"
-          >
+          <Link href="/auth/register" className="text-sm text-muted-foreground hover:text-primary">
             Don&apos;t have an account? Sign up
           </Link>
         </div>
@@ -122,7 +117,7 @@ export default function LoginPage() {
               Signing in....
             </>
           ) : (
-            "Sign in"
+            'Sign in'
           )}
         </Button>
       </form>

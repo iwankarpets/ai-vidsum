@@ -1,21 +1,17 @@
-"use client";
+'use client';
 
-import { useAuth } from "@/lib/hooks/auth";
-import Image from "next/image";
-import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useAuth } from '@/lib/hooks/auth';
+import Image from 'next/image';
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 
-export default function AuthLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function AuthLayout({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
     if (user) {
-      router.push("/dashboard");
+      router.push('/dashboard');
     }
   }, [user, router]);
 
@@ -24,13 +20,7 @@ export default function AuthLayout({
       <div className="relative hidden h-full flex-col bg-muted p-10 text-white lg:flex dark:border-r">
         <div className="absolute inset-0 bg-zinc-900" />
         <div className="relative z-20 flex items-center text-lg font-medium">
-          <Image
-            src="/logo.svg"
-            alt="logo"
-            width={40}
-            height={40}
-            className="mr-2"
-          />
+          <Image src="/logo.svg" alt="logo" width={40} height={40} className="mr-2" />
           <h1 className="text-2xl font-semibold">Video Summarizer</h1>
         </div>
       </div>

@@ -1,34 +1,34 @@
-import { Card } from "@/components/ui/card";
-import { buttonVariants } from "@/components/ui/button";
-import { type Video } from "@/lib/api/types";
-import { cn } from "cn";
-import { Clock, Eye, UserIcon, VideoIcon } from "lucide-react";
-import Link from "next/link";
+import { Card } from '@/components/ui/card';
+import { buttonVariants } from '@/components/ui/button';
+import { type Video } from '@/lib/api/types';
+import { cn } from 'cn';
+import { Clock, Eye, UserIcon, VideoIcon } from 'lucide-react';
+import Link from 'next/link';
 
 interface VideoCardProps {
   video: Video;
   showDetails?: boolean;
 }
 
-const statusStyles: Record<Video["status"], string> = {
-  pending: "bg-yellow-50 text-yellow-700 ring-1 ring-inset ring-yellow-600/20",
-  processing: "bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-600/20",
-  completed: "bg-green-50 text-green-700 ring-1 ring-inset ring-green-600/20",
-  failed: "bg-red-50 text-red-700 ring-1 ring-inset ring-red-600/20",
+const statusStyles: Record<Video['status'], string> = {
+  pending: 'bg-yellow-50 text-yellow-700 ring-1 ring-inset ring-yellow-600/20',
+  processing: 'bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-600/20',
+  completed: 'bg-green-50 text-green-700 ring-1 ring-inset ring-green-600/20',
+  failed: 'bg-red-50 text-red-700 ring-1 ring-inset ring-red-600/20',
 };
 
 const sentimentStyles = {
-  positive: "bg-green-50 text-green-700",
-  negative: "bg-red-50 text-red-700",
-  neutral: "bg-gray-100 text-gray-700",
+  positive: 'bg-green-50 text-green-700',
+  negative: 'bg-red-50 text-red-700',
+  neutral: 'bg-gray-100 text-gray-700',
 };
 
 function formatDuration(totalSeconds: number): string {
   const hours = Math.floor(totalSeconds / 3600);
   const minutes = Math.floor((totalSeconds % 3600) / 60);
   const seconds = totalSeconds % 60;
-  const mm = hours > 0 ? String(minutes).padStart(2, "0") : String(minutes);
-  const ss = String(seconds).padStart(2, "0");
+  const mm = hours > 0 ? String(minutes).padStart(2, '0') : String(minutes);
+  const ss = String(seconds).padStart(2, '0');
   return hours > 0 ? `${hours}:${mm}:${ss}` : `${mm}:${ss}`;
 }
 
@@ -59,7 +59,7 @@ export function VideoCard({ video, showDetails = true }: VideoCardProps) {
               <h3 className="truncate text-base font-semibold leading-6">{video.title}</h3>
               <span
                 className={cn(
-                  "shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium capitalize",
+                  'shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium capitalize',
                   statusStyles[video.status],
                 )}
               >
@@ -68,9 +68,7 @@ export function VideoCard({ video, showDetails = true }: VideoCardProps) {
             </div>
 
             {showDetails && video.description && (
-              <p className="mb-3 line-clamp-2 text-sm text-muted-foreground">
-                {video.description}
-              </p>
+              <p className="mb-3 line-clamp-2 text-sm text-muted-foreground">{video.description}</p>
             )}
 
             <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
@@ -91,7 +89,7 @@ export function VideoCard({ video, showDetails = true }: VideoCardProps) {
               <div className="mt-3 flex flex-wrap items-center gap-2">
                 <span
                   className={cn(
-                    "rounded-full px-2.5 py-0.5 text-xs font-medium capitalize",
+                    'rounded-full px-2.5 py-0.5 text-xs font-medium capitalize',
                     sentimentStyles[video.analysis.sentiment],
                   )}
                 >
@@ -113,9 +111,9 @@ export function VideoCard({ video, showDetails = true }: VideoCardProps) {
             <Link
               href={`/dashboard/videos/${video.id}`}
               className={buttonVariants({
-                variant: "outline",
-                size: "sm",
-                className: "shrink-0 gap-1.5 transition-all duration-300 hover:gap-2.5",
+                variant: 'outline',
+                size: 'sm',
+                className: 'shrink-0 gap-1.5 transition-all duration-300 hover:gap-2.5',
               })}
             >
               View

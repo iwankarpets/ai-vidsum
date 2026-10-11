@@ -1,22 +1,22 @@
-"use client";
+'use client';
 
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button, buttonVariants } from '@/components/ui/button';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Skeleton } from "@/components/ui/skeleton";
-import { useUserVideos } from "@/lib/hooks/queries/videos";
-import { AlertCircle, Plus, VideoIcon } from "lucide-react";
-import Link from "next/link";
-import { useState } from "react";
-import { VideoCard } from "../components/video-card";
+} from '@/components/ui/select';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useUserVideos } from '@/lib/hooks/queries/videos';
+import { AlertCircle, Plus, VideoIcon } from 'lucide-react';
+import Link from 'next/link';
+import { useState } from 'react';
+import { VideoCard } from '../components/video-card';
 
 export default function VideosPage() {
-  const [filter, setFilter] = useState<string>("all");
+  const [filter, setFilter] = useState<string>('all');
   const { data: videos, isLoading, error, refetch } = useUserVideos();
 
   if (error && !videos) {
@@ -58,13 +58,13 @@ export default function VideosPage() {
   }
 
   const filteredVideos = videos.filter((video) => {
-    if (filter === "all") {
+    if (filter === 'all') {
       return true;
     }
-    if (filter === "analyzed") {
+    if (filter === 'analyzed') {
       return !!video.analysis;
     }
-    if (filter === "transcribed") {
+    if (filter === 'transcribed') {
       return !!video.transcription;
     }
     return video.status === filter;
@@ -78,7 +78,7 @@ export default function VideosPage() {
           <p className="text-muted-foreground">Manage and view your processed videos</p>
         </div>
         <div className="flex items-center gap-4">
-          <Select value={filter} onValueChange={(value) => setFilter(value ?? "all")}>
+          <Select value={filter} onValueChange={(value) => setFilter(value ?? 'all')}>
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Filter videos" />
             </SelectTrigger>

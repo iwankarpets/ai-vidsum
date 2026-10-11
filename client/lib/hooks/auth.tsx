@@ -31,7 +31,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     queryClient.clear();
   }, [queryClient]);
 
- 
   useEffect(() => {
     setSessionExpiredHandler(() => {
       clearSession();
