@@ -269,7 +269,7 @@ export class JobsService {
     }
 
     if (job.data.userId !== userId) {
-     throw new AppError(StatusCodes.FORBIDDEN, 'Access denied', 'JOB_ACCESS_DENIED');
+      throw new AppError(StatusCodes.FORBIDDEN, 'Access denied', 'JOB_ACCESS_DENIED');
     }
 
     const state = (await job.getState()) as string;
@@ -356,26 +356,26 @@ export class JobsService {
   }
 
   private static async assertWithinLimits(userId: string, durationSeconds: number) {
-  if (durationSeconds > LIMITS.maxVideoDurationSeconds) {
-    const maxMinutes = Math.floor(LIMITS.maxVideoDurationSeconds / 60);
-    throw new AppError(
-      StatusCodes.BAD_REQUEST,
-      `Video is too long. Maximum length is ${maxMinutes} minutes`,
-      'VIDEO_TOO_LONG',
-    );
-  }
+    if (durationSeconds > LIMITS.maxVideoDurationSeconds) {
+      const maxMinutes = Math.floor(LIMITS.maxVideoDurationSeconds / 60);
+      throw new AppError(
+        StatusCodes.BAD_REQUEST,
+        `Video is too long. Maximum length is ${maxMinutes} minutes`,
+        'VIDEO_TOO_LONG',
+      );
+    }
 
-  const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
-  const videosToday = await this.videoRepository.count({
-    where: { user: { id: userId }, createdAt: MoreThanOrEqual(since) },
-  });
+    const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const videosToday = await this.videoRepository.count({
+      where: { user: { id: userId }, createdAt: MoreThanOrEqual(since) },
+    });
 
-  if (videosToday >= LIMITS.maxVideosPerDay) {
-    throw new AppError(
-      StatusCodes.TOO_MANY_REQUESTS,
-      `Daily limit of ${LIMITS.maxVideosPerDay} videos reached. Try again later`,
-      'DAILY_LIMIT_EXCEEDED',
-    );
+    if (videosToday >= LIMITS.maxVideosPerDay) {
+      throw new AppError(
+        StatusCodes.TOO_MANY_REQUESTS,
+        `Daily limit of ${LIMITS.maxVideosPerDay} videos reached. Try again later`,
+        'DAILY_LIMIT_EXCEEDED',
+      );
+    }
   }
-}
 }

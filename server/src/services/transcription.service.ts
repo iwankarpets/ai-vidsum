@@ -41,7 +41,11 @@ export class TranscriptionService {
       }
     } catch (error) {
       logger.error(`Error creating bucket ${this.BUCKET_NAME}`, { error });
-      throw new AppError(StatusCodes.INTERNAL_SERVER_ERROR, 'Failed to create bucket', 'BUCKET_CREATE_FAILED');
+      throw new AppError(
+        StatusCodes.INTERNAL_SERVER_ERROR,
+        'Failed to create bucket',
+        'BUCKET_CREATE_FAILED',
+      );
     }
   }
 
@@ -63,7 +67,11 @@ export class TranscriptionService {
       return gcsUrl;
     } catch (error) {
       logger.error(`Error uploading audio to GCS: ${String(error)}`);
-      throw new AppError(StatusCodes.INTERNAL_SERVER_ERROR, 'Failed to upload audio to GCS', 'GCS_UPLOAD_FAILED');
+      throw new AppError(
+        StatusCodes.INTERNAL_SERVER_ERROR,
+        'Failed to upload audio to GCS',
+        'GCS_UPLOAD_FAILED',
+      );
     }
   }
 
@@ -86,7 +94,11 @@ export class TranscriptionService {
       }
     } catch (error) {
       logger.error(`Error deleting audio from GCS: ${String(error)}`);
-      throw new AppError(StatusCodes.INTERNAL_SERVER_ERROR, 'Failed to delete audio from GCS', 'GCS_DELETE_FAILED');
+      throw new AppError(
+        StatusCodes.INTERNAL_SERVER_ERROR,
+        'Failed to delete audio from GCS',
+        'GCS_DELETE_FAILED',
+      );
     }
   }
 
@@ -114,9 +126,17 @@ export class TranscriptionService {
         })
         .on('error', (err) => {
           logger.error(`Error converting audio: ${String(err)}`);
-          reject(reject(new AppError(StatusCodes.INTERNAL_SERVER_ERROR, 'Failed to convert audio', 'AUDIO_CONVERSION_FAILED')));
+          reject(
+            reject(
+              new AppError(
+                StatusCodes.INTERNAL_SERVER_ERROR,
+                'Failed to convert audio',
+                'AUDIO_CONVERSION_FAILED',
+              ),
+            ),
+          );
         })
-        .save(outputPath); 
+        .save(outputPath);
     });
   }
 
@@ -152,7 +172,13 @@ export class TranscriptionService {
         })
         .on('error', (err: Error) => {
           logger.error(`Error detecting content type: ${String(err)}`);
-          reject(new AppError(StatusCodes.INTERNAL_SERVER_ERROR, 'Failed to detect content type', 'CONTENT_TYPE_DETECTION_FAILED'));
+          reject(
+            new AppError(
+              StatusCodes.INTERNAL_SERVER_ERROR,
+              'Failed to detect content type',
+              'CONTENT_TYPE_DETECTION_FAILED',
+            ),
+          );
         })
         .save('-');
     });
@@ -164,7 +190,7 @@ export class TranscriptionService {
 
     try {
       if (!audioPath) {
-       throw new AppError(StatusCodes.BAD_REQUEST, 'No audio file provided', 'AUDIO_FILE_MISSING');
+        throw new AppError(StatusCodes.BAD_REQUEST, 'No audio file provided', 'AUDIO_FILE_MISSING');
       }
 
       await this.ensureBucketExists();
@@ -220,7 +246,11 @@ export class TranscriptionService {
       logger.info(`Transcription resp: ${operation.name}`);
 
       if (!response.results || response.results.length === 0) {
-        throw new AppError(StatusCodes.BAD_REQUEST, 'No transcription results found', 'NO_TRANSCRIPTION_RESULTS');
+        throw new AppError(
+          StatusCodes.BAD_REQUEST,
+          'No transcription results found',
+          'NO_TRANSCRIPTION_RESULTS',
+        );
       }
 
       const transcription = response.results
@@ -228,7 +258,11 @@ export class TranscriptionService {
         .join(' ');
 
       if (!transcription.trim()) {
-       throw new AppError(StatusCodes.BAD_REQUEST, 'No transcription results found', 'NO_TRANSCRIPTION_RESULTS');
+        throw new AppError(
+          StatusCodes.BAD_REQUEST,
+          'No transcription results found',
+          'NO_TRANSCRIPTION_RESULTS',
+        );
       }
 
       const confidenceScores = response.results
@@ -250,7 +284,11 @@ export class TranscriptionService {
         throw error;
       }
       logger.error(`Error transcribing audio: ${String(error)}`);
-      throw new AppError(StatusCodes.INTERNAL_SERVER_ERROR, 'Failed to transcribe audio', 'TRANSCRIPTION_FAILED');
+      throw new AppError(
+        StatusCodes.INTERNAL_SERVER_ERROR,
+        'Failed to transcribe audio',
+        'TRANSCRIPTION_FAILED',
+      );
     } finally {
       await Promise.all([
         convertedPath ? unlink(convertedPath).catch(() => {}) : Promise.resolve(),

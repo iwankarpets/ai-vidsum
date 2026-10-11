@@ -81,7 +81,11 @@ ${transcription}
         !analysis.topics ||
         !analysis.suggestedTags
       ) {
-       throw new AppError(StatusCodes.BAD_REQUEST, 'Invalid response format', 'AI_INVALID_RESPONSE');
+        throw new AppError(
+          StatusCodes.BAD_REQUEST,
+          'Invalid response format',
+          'AI_INVALID_RESPONSE',
+        );
       }
 
       if (!['positive', 'negative', 'neutral'].includes(analysis.sentiment)) {
@@ -100,7 +104,11 @@ ${transcription}
         throw error;
       }
       logger.error('Failed to analyze transcription', { error });
-      throw new AppError(StatusCodes.INTERNAL_SERVER_ERROR, 'Failed to analyze transcription', 'AI_ANALYSIS_FAILED');
+      throw new AppError(
+        StatusCodes.INTERNAL_SERVER_ERROR,
+        'Failed to analyze transcription',
+        'AI_ANALYSIS_FAILED',
+      );
     }
   }
 }

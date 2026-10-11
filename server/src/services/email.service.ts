@@ -23,7 +23,11 @@ export class EmailService {
       });
     } catch (error) {
       logger.error(`Error sending verification email: ${String(error)}`);
-      throw new AppError(StatusCodes.INTERNAL_SERVER_ERROR, 'Failed to send verification email', 'EMAIL_SEND_FAILED');
+      throw new AppError(
+        StatusCodes.INTERNAL_SERVER_ERROR,
+        'Failed to send verification email',
+        'EMAIL_SEND_FAILED',
+      );
     }
   }
 
@@ -37,7 +41,11 @@ export class EmailService {
       });
     } catch (error) {
       logger.error(`Error sending welcome email: ${String(error)}`);
-      throw new AppError(StatusCodes.INTERNAL_SERVER_ERROR, 'Failed to send welcome email', 'EMAIL_SEND_FAILED');
+      throw new AppError(
+        StatusCodes.INTERNAL_SERVER_ERROR,
+        'Failed to send welcome email',
+        'EMAIL_SEND_FAILED',
+      );
     }
   }
 }

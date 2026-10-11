@@ -63,7 +63,7 @@ export class VideoService {
     });
 
     if (!video) {
-     throw new AppError(StatusCodes.NOT_FOUND, 'Video not found', 'VIDEO_NOT_FOUND');
+      throw new AppError(StatusCodes.NOT_FOUND, 'Video not found', 'VIDEO_NOT_FOUND');
     }
 
     return video;
@@ -86,7 +86,7 @@ export class VideoService {
       const info = rawInfo as YoutubeDLOutput;
 
       if (!info.title || !info.uploader || typeof info.duration !== 'number') {
-       throw new AppError(StatusCodes.BAD_REQUEST, 'Invalid video info', 'INVALID_VIDEO_INFO');
+        throw new AppError(StatusCodes.BAD_REQUEST, 'Invalid video info', 'INVALID_VIDEO_INFO');
       }
 
       const thumbnail = info.thumbnail || info.thumbnails?.[0]?.url || getFallbackThumbnail(url);
@@ -116,7 +116,11 @@ export class VideoService {
         }
       }
 
-      throw new AppError(StatusCodes.INTERNAL_SERVER_ERROR, 'Failed to get video info', 'VIDEO_INFO_FETCH_FAILED');
+      throw new AppError(
+        StatusCodes.INTERNAL_SERVER_ERROR,
+        'Failed to get video info',
+        'VIDEO_INFO_FETCH_FAILED',
+      );
     }
   }
 
@@ -144,7 +148,11 @@ export class VideoService {
       const fileStats = await stat(audioPath);
 
       if (fileStats.size === 0) {
-        throw new AppError(StatusCodes.INTERNAL_SERVER_ERROR, 'Failed to download audio', 'AUDIO_DOWNLOAD_FAILED');
+        throw new AppError(
+          StatusCodes.INTERNAL_SERVER_ERROR,
+          'Failed to download audio',
+          'AUDIO_DOWNLOAD_FAILED',
+        );
       }
 
       return audioPath;
@@ -157,7 +165,11 @@ export class VideoService {
 
       if (error instanceof Error) {
         if (error.message.includes('ffmpeg')) {
-         throw new AppError(StatusCodes.INTERNAL_SERVER_ERROR, 'Failed to download audio', 'AUDIO_DOWNLOAD_FAILED');
+          throw new AppError(
+            StatusCodes.INTERNAL_SERVER_ERROR,
+            'Failed to download audio',
+            'AUDIO_DOWNLOAD_FAILED',
+          );
         }
         if (error.message.includes('Private video')) {
           throw new AppError(StatusCodes.FORBIDDEN, 'This video is private', 'VIDEO_PRIVATE');
@@ -167,7 +179,11 @@ export class VideoService {
         }
       }
 
-      throw new AppError(StatusCodes.INTERNAL_SERVER_ERROR, 'Failed to download audio', 'AUDIO_DOWNLOAD_FAILED');
+      throw new AppError(
+        StatusCodes.INTERNAL_SERVER_ERROR,
+        'Failed to download audio',
+        'AUDIO_DOWNLOAD_FAILED',
+      );
     }
   }
 }

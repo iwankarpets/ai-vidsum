@@ -83,7 +83,7 @@ export class VideoController {
       const userId = req.user?.userId;
 
       if (!userId) {
-       throw new AppError(StatusCodes.UNAUTHORIZED, 'Unauthorized', 'UNAUTHORIZED');
+        throw new AppError(StatusCodes.UNAUTHORIZED, 'Unauthorized', 'UNAUTHORIZED');
       }
 
       if (!jobId || typeof jobId !== 'string') {
@@ -140,7 +140,7 @@ export class VideoController {
     try {
       const userId = req.user?.userId;
       if (!userId) {
-       throw new AppError(StatusCodes.UNAUTHORIZED, 'Unauthorized', 'UNAUTHORIZED');
+        throw new AppError(StatusCodes.UNAUTHORIZED, 'Unauthorized', 'UNAUTHORIZED');
       }
 
       const videos = await VideoService.getUserVideos(userId);

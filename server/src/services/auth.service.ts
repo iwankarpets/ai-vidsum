@@ -8,7 +8,7 @@ import { EmailService } from './email.service.js';
 import logger from '../utils/logger.js';
 import { IsNull } from 'typeorm';
 import { RefreshToken } from '../entities/refresh-token.entity.js';
-import { REFRESH_TTL_MS } from '../config/auth.js'
+import { REFRESH_TTL_MS } from '../config/auth.js';
 import { toPublicUser } from '../utils/user.js';
 
 export class AuthService {
@@ -46,9 +46,9 @@ export class AuthService {
 
     await EmailService.sendVerificationEmail(email, emailVerificationToken);
 
-   const token = this.generateToken(user);
-const refreshToken = await this.issueRefreshToken(user);
-return { user: toPublicUser(user), token, refreshToken };
+    const token = this.generateToken(user);
+    const refreshToken = await this.issueRefreshToken(user);
+    return { user: toPublicUser(user), token, refreshToken };
   }
 
   static generateToken(user: User): string {
@@ -156,8 +156,8 @@ return { user: toPublicUser(user), token, refreshToken };
     await this.userRepository.save(user);
 
     const token = this.generateToken(user);
-  const refreshToken = await this.issueRefreshToken(user);
-  return { user: toPublicUser(user), token, refreshToken };
+    const refreshToken = await this.issueRefreshToken(user);
+    return { user: toPublicUser(user), token, refreshToken };
   }
 
   static verifyToken(token: string): { userId: string; email: string } {
@@ -168,7 +168,7 @@ return { user: toPublicUser(user), token, refreshToken };
       };
     } catch (error) {
       logger.error('Verification failed', { error });
-     throw new AppError(StatusCodes.UNAUTHORIZED, 'Invalid token', 'INVALID_TOKEN');
+      throw new AppError(StatusCodes.UNAUTHORIZED, 'Invalid token', 'INVALID_TOKEN');
     }
   }
 
@@ -199,26 +199,30 @@ return { user: toPublicUser(user), token, refreshToken };
     entity.user = user;
     await this.refreshTokenRepository.save(entity);
 
-    return rawToken; 
-}
-
-static async refresh(rawToken: string) {
-  const stored = await this.refreshTokenRepository.findOne({
-    where: { tokenHash: this.hashToken(rawToken) },
-    relations: ['user'],
-  });
-
-  if (!stored || stored.revokedAt || stored.expiresAt < new Date()) {
-    throw new AppError(StatusCodes.UNAUTHORIZED, 'Invalid refresh token', 'INVALID_REFRESH_TOKEN');
+    return rawToken;
   }
 
-  return { user: toPublicUser(stored.user), token: this.generateToken(stored.user) };
-}
+  static async refresh(rawToken: string) {
+    const stored = await this.refreshTokenRepository.findOne({
+      where: { tokenHash: this.hashToken(rawToken) },
+      relations: ['user'],
+    });
 
-static async logout(rawToken: string): Promise<void> {
-  await this.refreshTokenRepository.update(
-    { tokenHash: this.hashToken(rawToken), revokedAt: IsNull() },
-    { revokedAt: new Date() },
-  );
-}
+    if (!stored || stored.revokedAt || stored.expiresAt < new Date()) {
+      throw new AppError(
+        StatusCodes.UNAUTHORIZED,
+        'Invalid refresh token',
+        'INVALID_REFRESH_TOKEN',
+      );
+    }
+
+    return { user: toPublicUser(stored.user), token: this.generateToken(stored.user) };
+  }
+
+  static async logout(rawToken: string): Promise<void> {
+    await this.refreshTokenRepository.update(
+      { tokenHash: this.hashToken(rawToken), revokedAt: IsNull() },
+      { revokedAt: new Date() },
+    );
+  }
 }
