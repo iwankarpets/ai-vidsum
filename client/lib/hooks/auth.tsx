@@ -1,10 +1,10 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
 import { type User } from '../api/types';
-import { setTokenGetter } from '../api/client';
+import { refreshSession, setAccessToken, setSessionExpiredHandler } from '../api/client';
 import { authApi } from '../api/auth';
 
 interface AuthContextType {
@@ -24,47 +24,46 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const queryClient = useQueryClient();
 
+  const clearSession = useCallback(() => {
+    setAccessToken(null);
+    setToken(null);
+    setUser(null);
+    queryClient.clear();
+  }, [queryClient]);
+
+ 
   useEffect(() => {
-    const storedToken = localStorage.getItem('token');
-    if (!storedToken) {
-      setLoading(false);
-      return;
-    }
+    setSessionExpiredHandler(() => {
+      clearSession();
+      router.push('/auth/login');
+    });
+    return () => setSessionExpiredHandler(null);
+  }, [clearSession, router]);
 
-    setTokenGetter(() => storedToken);
-    setToken(storedToken);
-
-    authApi
-      .getCurrentUser()
+  // При загрузке страницы пробуем восстановить сессию по refresh-cookie
+  useEffect(() => {
+    refreshSession()
       .then(({ user: currentUser, token: freshToken }) => {
-        localStorage.setItem('token', freshToken);
-        setTokenGetter(() => freshToken);
         setToken(freshToken);
         setUser(currentUser);
       })
       .catch(() => {
-        localStorage.removeItem('token');
-        setTokenGetter(() => null);
-        setToken(null);
+        clearSession();
       })
       .finally(() => {
         setLoading(false);
       });
-  }, []);
+  }, [clearSession]);
 
   const login = (newToken: string, newUser: User) => {
-    localStorage.setItem('token', newToken);
-    setTokenGetter(() => newToken);
+    setAccessToken(newToken);
     setToken(newToken);
     setUser(newUser);
   };
 
   const logout = () => {
-    localStorage.removeItem('token');
-    setTokenGetter(() => null);
-    setToken(null);
-    setUser(null);
-    queryClient.clear();
+    void authApi.logout().catch(() => undefined);
+    clearSession();
     router.push('/auth/login');
   };
 
