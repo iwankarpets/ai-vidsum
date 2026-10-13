@@ -19,7 +19,7 @@ export class AIService {
   private static readonly genAI = new GoogleGenerativeAI(GOOGLE_API_KEY);
 
   private static readonly model = AIService.genAI.getGenerativeModel({
-    model: 'gemini-3.5-flash',
+    model: 'gemini-3.8-flash',
   });
 
   private static generatePrompt(transcription: string, videoInfo?: VideoInfo): string {
