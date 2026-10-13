@@ -26,7 +26,7 @@ export const getJobStatus = async (jobId: string | number): Promise<JobStatus> =
 };
 
 export const getAllJobs = async (): Promise<JobsListResponse> => {
-  const response = await apiClient.post<ApiSuccessResponse<JobStatus[]>>('/video/jobs/running');
+  const response = await apiClient.get<ApiSuccessResponse<JobStatus[]>>('/video/jobs/running');
   return { jobs: response.data.data };
 };
 

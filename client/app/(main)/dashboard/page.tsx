@@ -1,3 +1,4 @@
+"use client";
 import { Loader2 } from 'lucide-react';
 import VideoSubmissionForm from './components/video-submission-form';
 import { useVideoProcessingStatus } from '@/lib/hooks/queries/video';
@@ -8,7 +9,7 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-8">
-      {proccessingStatus?.isProccesing && (
+      {proccessingStatus?.isProcessing && (
         <div
           className={cn(
             'relative px-4 py-3 transition-all duration-500 rounded-lg',
